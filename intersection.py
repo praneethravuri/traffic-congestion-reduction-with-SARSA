@@ -28,6 +28,7 @@ directionNumbers = {0:'right', 1:'down', 2:'left', 3:'up'}
 # Coordinates of signal image, timer, and vehicle count
 signalCoods = [(530,230),(810,230),(810,570),(530,570)]
 signalTimerCoods = [(530,210),(810,210),(810,550),(530,550)]
+signalDirection = ["West", "North", "East", "South"]
 
 # Coordinates of stop lines
 stopLines = {'right': 590, 'down': 330, 'left': 800, 'up': 535}
@@ -221,6 +222,9 @@ class Main:
 
         screen.blit(background,(0,0))   # display background in simulation
         for i in range(0,noOfSignals):  # display signal and set timer according to current status: green, yello, or red
+            direction_text = font.render(signalDirection[i], True, white, black)  # Create a text surface
+            direction_text_coods = (signalTimerCoods[i][0], signalTimerCoods[i][1] + 120)  
+            screen.blit(direction_text, direction_text_coods)
             if(i==currentGreen):
                 if(currentYellow==1):
                     signals[i].signalText = signals[i].yellow
