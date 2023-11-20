@@ -93,14 +93,14 @@ def draw_traffic_lights(screen):
 
 
 def draw_crossings(screen):
+    # Crossing parameters for the west lane
     # crossing for the west lane
     west_crossing_x = intersection_center[0] - road_width//2 - 25
     west_crossing_y = intersection_center[1] - road_width//2
-    pygame.draw.rect(screen, GRAY, (west_crossing_x, west_crossing_y, intersection_trl_width-5, 125))
+
+    pygame.draw.rect(screen, GRAY, (west_crossing_x, west_crossing_y, intersection_trl_width, 125))
 
 
-    # crossing for the east lane
-    east_crossing_x = 0
 
 
 
