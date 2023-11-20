@@ -16,8 +16,6 @@ nextGreen = (currentGreen+1)%noOfSignals    # Indicates which signal will turn g
 currentYellow = 0   # Indicates whether yellow signal is on or off 
 
 speeds = {'car':2.25, 'bus':1.8, 'truck':1.8, 'bike':2.5}  # average speeds of vehicles
-carsCrossed = {'right': 0, 'down': 0, 'left': 0, 'up': 0}
-
 
 # Coordinates of vehicles' start
 x = {'right':[0,0,0], 'down':[755,727,697], 'left':[1400,1400,1400], 'up':[602,627,657]}    
@@ -98,45 +96,27 @@ class Vehicle(pygame.sprite.Sprite):
         screen.blit(self.image, (self.x, self.y))
 
     def move(self):
-        if self.direction == 'right':
-            # Check if the vehicle has crossed the stop line
-            if self.crossed == 0 and self.x + self.image.get_rect().width > stopLines[self.direction]:
+        if(self.direction=='right'):
+            if(self.crossed==0 and self.x+self.image.get_rect().width>stopLines[self.direction]):   # if the image has crossed stop line now
                 self.crossed = 1
-                # Increment the counter if the signal is green and yellow is off
-                if currentGreen == self.direction_number and currentYellow == 0:
-                    carsCrossed[self.direction] += 1
-
-            # Move the vehicle if conditions are met
-            if (self.x + self.image.get_rect().width <= self.stop or self.crossed == 1 or (currentGreen == 0 and currentYellow == 0)) and (self.index == 0 or self.x + self.image.get_rect().width < (vehicles[self.direction][self.lane][self.index - 1].x - movingGap)):
-                self.x += self.speed
-
-        elif self.direction == 'down':
-            if self.crossed == 0 and self.y + self.image.get_rect().height > stopLines[self.direction]:
+            if((self.x+self.image.get_rect().width<=self.stop or self.crossed == 1 or (currentGreen==0 and currentYellow==0)) and (self.index==0 or self.x+self.image.get_rect().width<(vehicles[self.direction][self.lane][self.index-1].x - movingGap))):                
+            # (if the image has not reached its stop coordinate or has crossed stop line or has green signal) and (it is either the first vehicle in that lane or it is has enough gap to the next vehicle in that lane)
+                self.x += self.speed  # move the vehicle
+        elif(self.direction=='down'):
+            if(self.crossed==0 and self.y+self.image.get_rect().height>stopLines[self.direction]):
                 self.crossed = 1
-                if currentGreen == self.direction_number and currentYellow == 0:
-                    carsCrossed[self.direction] += 1
-
-            if (self.y + self.image.get_rect().height <= self.stop or self.crossed == 1 or (currentGreen == 1 and currentYellow == 0)) and (self.index == 0 or self.y + self.image.get_rect().height < (vehicles[self.direction][self.lane][self.index - 1].y - movingGap)):
+            if((self.y+self.image.get_rect().height<=self.stop or self.crossed == 1 or (currentGreen==1 and currentYellow==0)) and (self.index==0 or self.y+self.image.get_rect().height<(vehicles[self.direction][self.lane][self.index-1].y - movingGap))):                
                 self.y += self.speed
-
-        elif self.direction == 'left':
-            if self.crossed == 0 and self.x < stopLines[self.direction]:
+        elif(self.direction=='left'):
+            if(self.crossed==0 and self.x<stopLines[self.direction]):
                 self.crossed = 1
-                if currentGreen == self.direction_number and currentYellow == 0:
-                    carsCrossed[self.direction] += 1
-
-            if (self.x >= self.stop or self.crossed == 1 or (currentGreen == 2 and currentYellow == 0)) and (self.index == 0 or self.x > (vehicles[self.direction][self.lane][self.index - 1].x + vehicles[self.direction][self.lane][self.index - 1].image.get_rect().width + movingGap)):
-                self.x -= self.speed
-
-        elif self.direction == 'up':
-            if self.crossed == 0 and self.y < stopLines[self.direction]:
+            if((self.x>=self.stop or self.crossed == 1 or (currentGreen==2 and currentYellow==0)) and (self.index==0 or self.x>(vehicles[self.direction][self.lane][self.index-1].x + vehicles[self.direction][self.lane][self.index-1].image.get_rect().width + movingGap))):                
+                self.x -= self.speed   
+        elif(self.direction=='up'):
+            if(self.crossed==0 and self.y<stopLines[self.direction]):
                 self.crossed = 1
-                if currentGreen == self.direction_number and currentYellow == 0:
-                    carsCrossed[self.direction] += 1
-
-            if (self.y >= self.stop or self.crossed == 1 or (currentGreen == 3 and currentYellow == 0)) and (self.index == 0 or self.y > (vehicles[self.direction][self.lane][self.index - 1].y + vehicles[self.direction][self.lane][self.index - 1].image.get_rect().height + movingGap)):
+            if((self.y>=self.stop or self.crossed == 1 or (currentGreen==3 and currentYellow==0)) and (self.index==0 or self.y>(vehicles[self.direction][self.lane][self.index-1].y + vehicles[self.direction][self.lane][self.index-1].image.get_rect().height + movingGap))):                
                 self.y -= self.speed
-
 
 # Initialization of signals with default values
 def initialize():
@@ -205,10 +185,6 @@ def generateVehicles():
         Vehicle(lane_number, vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
         time.sleep(1)
 
-def totalVehiclesPassed():
-    return sum(carsCrossed.values())
-
-
 class Main:
     thread1 = threading.Thread(name="initialization",target=initialize, args=())    # initialization
     thread1.daemon = True
@@ -268,14 +244,6 @@ class Main:
         for i in range(0,noOfSignals):  
             signalTexts[i] = font.render(str(signals[i].signalText), True, white, black)
             screen.blit(signalTexts[i],signalTimerCoods[i])
-
-        for direction, count in carsCrossed.items():
-            count_text = font.render(f'{direction.capitalize()} Passed: {count}', True, white, black)
-            screen.blit(count_text, (1050, 20 + 30 * list(carsCrossed.keys()).index(direction)))  # Adjust position as needed
-
-        total_vehicles = totalVehiclesPassed()
-        total_vehicles_text = font.render(f'Total Vehicles Passed: {total_vehicles}', True, white, black)
-        screen.blit(total_vehicles_text, (1050, 20 + 30 * (len(carsCrossed) + 1)))
 
         # display the vehicles
         for vehicle in simulation:  
