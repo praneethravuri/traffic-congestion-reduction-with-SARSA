@@ -97,9 +97,22 @@ def draw_crossings(screen):
     # crossing for the west lane
     west_crossing_x = intersection_center[0] - road_width//2 - 25
     west_crossing_y = intersection_center[1] - road_width//2
+    pygame.draw.rect(screen, GRAY, (west_crossing_x, west_crossing_y, intersection_trl_width, road_width))
 
-    pygame.draw.rect(screen, GRAY, (west_crossing_x, west_crossing_y, intersection_trl_width, 125))
+    # crossing for the east lane
+    east_crossing_x = intersection_center[0] + road_width//2
+    east_crossing_y = west_crossing_y
+    pygame.draw.rect(screen, GRAY, (east_crossing_x, east_crossing_y, intersection_trl_width, road_width))
 
+    # crossing for the north lane
+    north_crossing_x = intersection_center[0] - road_width//2
+    north_crossing_y = intersection_center[1] - road_width//2 - 25
+    pygame.draw.rect(screen, GRAY, (north_crossing_x, north_crossing_y, road_width, 25))
+
+    # crossing for the south lane
+    south_crossing_x = north_crossing_x
+    south_crossing_y = intersection_center[1] - road_width//2 + 125
+    pygame.draw.rect(screen, GRAY, (south_crossing_x, south_crossing_y, road_width, 25))
 
 
 
