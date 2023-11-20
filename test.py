@@ -31,12 +31,12 @@ intersection_center = (width // 2, height // 2)
 intersection_trl_width = 30
 
 # traffic light parameters
-traffic_lights_directions = ["north", "south", "east", "west"]
+traffic_lights_directions = ["north", "east", "south", "west"]
 starting_traffic_light = random.choice(traffic_lights_directions)
 traffic_light_change_times = {
-    "RED" : 5,
-    "GREEN" : 10,
-    "YELLOW" : 2
+    "RED" : 7,
+    "GREEN" : 7,
+    "YELLOW" : 3
 }
 
 
@@ -71,22 +71,30 @@ def draw_intersection(screen):
     screen.blit(text, (intersection_center[0] - 30, intersection_center[1]//2 + intersection_center[1]))
 
 
-def draw_traffic_lights(screen, current_green_trl):
+def draw_traffic_lights(screen, current_traffic_light, current_light_state):
     # Initialize all traffic lights to red
     north_color = RED_TR
     south_color = RED_TR
     east_color = RED_TR
     west_color = RED_TR
 
-    # Change the color of the current green traffic light
-    if current_green_trl == "north":
-        north_color = GREEN_TR
-    elif current_green_trl == "south":
-        south_color = GREEN_TR
-    elif current_green_trl == "east":
-        east_color = GREEN_TR
-    elif current_green_trl == "west":
-        west_color = GREEN_TR
+    # Determine the color based on current state
+    if current_light_state == "GREEN":
+        light_color = GREEN_TR
+    elif current_light_state == "YELLOW":
+        light_color = YELLOW_TR
+    elif current_light_state == "RED":
+        light_color = RED_TR
+
+    # Set the color of the current traffic light
+    if current_traffic_light == "north":
+        north_color = light_color
+    elif current_traffic_light == "south":
+        south_color = light_color
+    elif current_traffic_light == "east":
+        east_color = light_color
+    elif current_traffic_light == "west":
+        west_color = light_color
 
     # Drawing traffic lights with the updated colors
     # North traffic light
@@ -108,6 +116,7 @@ def draw_traffic_lights(screen, current_green_trl):
     west_traffic_light_height = traffic_light_width * 2
     west_traffic_light_pos = (intersection_center[0] - road_width // 2 - intersection_trl_width, intersection_center[1] - west_traffic_light_height // 2)
     pygame.draw.rect(screen, west_color, (*west_traffic_light_pos, 5, west_traffic_light_height))
+
 
 
 
@@ -136,19 +145,43 @@ def draw_crossings(screen):
 
 def main():
     running = True
+    current_traffic_light_index = traffic_lights_directions.index(starting_traffic_light)
+    current_traffic_light = traffic_lights_directions[current_traffic_light_index]  # Initialize current_traffic_light
+    current_light_state = "GREEN"
+    last_change_time = pygame.time.get_ticks()
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
+        current_time = pygame.time.get_ticks()
+
+        # Check if it's time to change the traffic light state
+        if current_light_state == "GREEN" and current_time - last_change_time >= traffic_light_change_times["GREEN"] * 1000:
+            current_light_state = "YELLOW"
+            last_change_time = current_time
+        elif current_light_state == "YELLOW" and current_time - last_change_time >= traffic_light_change_times["YELLOW"] * 1000:
+            current_light_state = "RED"
+            last_change_time = current_time
+            # Cycle to the next traffic light
+            current_traffic_light_index = (current_traffic_light_index + 1) % len(traffic_lights_directions)
+            current_traffic_light = traffic_lights_directions[current_traffic_light_index]
+        elif current_light_state == "RED" and current_time - last_change_time >= traffic_light_change_times["RED"] * 1000:
+            current_light_state = "GREEN"
+            last_change_time = current_time
+
         draw_intersection(screen)
-        draw_traffic_lights(screen, starting_traffic_light)
+        draw_traffic_lights(screen, current_traffic_light, current_light_state)
         draw_crossings(screen)
         pygame.display.flip()
+
+    pygame.quit()
+    sys.exit()
+
+
+
 
 
 if __name__ == "__main__":
     main()
-
-pygame.quit()
-sys.exit()
