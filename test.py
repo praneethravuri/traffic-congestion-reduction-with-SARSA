@@ -9,7 +9,19 @@ pygame.font.init()
 width, height = 1000, 800
 screen = pygame.display.set_mode((width, height))
 
-# colors
+# vehicle parameters
+vehicle_radius = 15
+vehicle_width = 15
+vehicle_straight = (255, 163, 60)
+vehicle_right = (255, 251, 115)
+vehicle_speed = 0.25
+vehicle_direction = ["straight", "right"]
+
+# Intersection parameters and colors
+road_width = 125
+traffic_light_width = road_width // 2
+intersection_center = (width // 2, height // 2)
+intersection_trl_width = 30
 BLACK = (0, 0, 0)
 GREEN = (0, 128, 0)
 RED = (255, 0, 0)
@@ -17,18 +29,13 @@ YELLOW = (255, 255, 0)
 GRAY = (128, 128, 128)
 WHITE = (255, 255, 255)
 
-# traffic light colors
+# crossing thresholds
+west_threshold = intersection_center[0] - road_width // 2 - intersection_trl_width - 30
+
+# traffic light parameters and colors
 YELLOW_TR = (255, 255, 0)
 GREEN_TR = (78, 228, 78)
 RED_TR = (255, 0, 0)
-
-# Intersection parameters
-road_width = 125
-traffic_light_width = road_width // 2
-intersection_center = (width // 2, height // 2)
-intersection_trl_width = 30
-
-# traffic light parameters
 traffic_lights_directions = ["north", "east", "south", "west"]
 starting_traffic_light = random.choice(traffic_lights_directions)
 traffic_light_change_times = {
@@ -145,12 +152,26 @@ def draw_crossings(screen):
     pygame.draw.rect(screen, GRAY, (south_crossing_x, south_crossing_y, road_width, 25))
 
 
+def draw_vehicle(screen, x, y, color, radius, width):
+    pygame.draw.circle(screen, color, [x, y], radius, width)
+
+
+def move_vehicle(screen, threshold, x, y, vehicle_speed):
+    # Update the position of the vehicle if it has not yet reached the threshold
+    if x < threshold:
+        x += vehicle_speed
+    return x, y  # Return the updated position
+
+
 def main():
     running = True
     current_traffic_light_index = traffic_lights_directions.index(starting_traffic_light)
-    current_traffic_light = traffic_lights_directions[current_traffic_light_index]  # Initialize current_traffic_light
+    current_traffic_light = traffic_lights_directions[current_traffic_light_index]
     current_light_state = "GREEN"
     last_change_time = pygame.time.get_ticks()
+
+    vehicle_x = 0
+    vehicle_y = intersection_center[1] + road_width // 4
 
     while running:
         for event in pygame.event.get():
@@ -176,9 +197,19 @@ def main():
             current_light_state = "GREEN"
             last_change_time = current_time
 
+        vehicle_type = random.choice(vehicle_direction)
+
+        # if vehicle_type == "straight":
+        #     vehicle_color = vehicle_straight
+        # else:
+        #     vehicle_color = vehicle_right
+
+        vehicle_x, vehicle_y = move_vehicle(screen, west_threshold, vehicle_x, vehicle_y, vehicle_speed)
         draw_intersection(screen)
         draw_traffic_lights(screen, current_traffic_light, current_light_state)
         draw_crossings(screen)
+        draw_vehicle(screen, vehicle_x, vehicle_y, vehicle_straight, vehicle_radius, vehicle_width)
+        move_vehicle(screen, west_threshold, vehicle_x, vehicle_y, vehicle_speed)
         pygame.display.flip()
 
     pygame.quit()
