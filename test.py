@@ -114,20 +114,21 @@ def draw_crossings(screen):
     south_crossing_y = intersection_center[1] - road_width//2 + 125
     pygame.draw.rect(screen, GRAY, (south_crossing_x, south_crossing_y, road_width, 25))
 
+def main():
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        draw_intersection(screen)
+        draw_traffic_lights(screen)
+        draw_crossings(screen)
+        pygame.display.flip()
 
 
-
-# main loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    draw_intersection(screen)
-    draw_traffic_lights(screen)
-    draw_crossings(screen)
-    pygame.display.flip()
+if __name__ == "__main__":
+    main()
 
 
 pygame.quit()
