@@ -1,5 +1,7 @@
 import pygame
 import sys
+import random
+import time
 
 pygame.init()
 pygame.font.init()
@@ -27,6 +29,17 @@ road_width = 125
 traffic_light_width = road_width//2
 intersection_center = (width // 2, height // 2)
 intersection_trl_width = 30
+
+# traffic light parameters
+traffic_lights_directions = ["north", "south", "east", "west"]
+starting_traffic_light = random.choice(traffic_lights_directions)
+traffic_light_change_times = {
+    "RED" : 5,
+    "GREEN" : 10,
+    "YELLOW" : 2
+}
+
+
 
 
 def draw_intersection(screen):
@@ -58,38 +71,45 @@ def draw_intersection(screen):
     screen.blit(text, (intersection_center[0] - 30, intersection_center[1]//2 + intersection_center[1]))
 
 
-def draw_traffic_lights(screen):
-    # North traffic lights
-    # North-straight traffic light
-    north_traffic_light_pos_straight = (intersection_center[0], intersection_center[1] - road_width // 2 - intersection_trl_width)
-    pygame.draw.rect(screen, RED_TR, (*north_traffic_light_pos_straight, traffic_light_width, 5))
-    # North-left traffic light
-    north_traffic_light_pos_left = (north_traffic_light_pos_straight[0] - traffic_light_width, north_traffic_light_pos_straight[1])
-    pygame.draw.rect(screen, GREEN_TR, (*north_traffic_light_pos_left, traffic_light_width, 5))
+def draw_traffic_lights(screen, current_green_trl):
+    # Initialize all traffic lights to red
+    north_color = RED_TR
+    south_color = RED_TR
+    east_color = RED_TR
+    west_color = RED_TR
 
-    # South traffic lights
-    # South-straight traffic light
-    south_traffic_light_pos_straight = (intersection_center[0], intersection_center[1] + road_width // 2 - 5 + intersection_trl_width)
-    pygame.draw.rect(screen, RED_TR, (*south_traffic_light_pos_straight, traffic_light_width, 5))
-    # South-left traffic light
-    south_traffic_light_pos_left = (south_traffic_light_pos_straight[0] - traffic_light_width, south_traffic_light_pos_straight[1])
-    pygame.draw.rect(screen, GREEN_TR, (*south_traffic_light_pos_left, traffic_light_width, 5))
+    # Change the color of the current green traffic light
+    if current_green_trl == "north":
+        north_color = GREEN_TR
+    elif current_green_trl == "south":
+        south_color = GREEN_TR
+    elif current_green_trl == "east":
+        east_color = GREEN_TR
+    elif current_green_trl == "west":
+        west_color = GREEN_TR
 
-    # East traffic lights
-    # East-straight traffic light
-    east_traffic_light_pos_straight = (intersection_center[0] + road_width // 2 + intersection_trl_width, intersection_center[1])
-    pygame.draw.rect(screen, RED_TR, (*east_traffic_light_pos_straight, 5, traffic_light_width))
-    # East-left traffic light
-    east_traffic_light_pos_left = (east_traffic_light_pos_straight[0], east_traffic_light_pos_straight[1] - traffic_light_width)
-    pygame.draw.rect(screen, GREEN_TR, (*east_traffic_light_pos_left, 5, traffic_light_width))
+    # Drawing traffic lights with the updated colors
+    # North traffic light
+    north_traffic_light_width = traffic_light_width * 2
+    north_traffic_light_pos = (intersection_center[0] - north_traffic_light_width // 2, intersection_center[1] - road_width // 2 - intersection_trl_width)
+    pygame.draw.rect(screen, north_color, (*north_traffic_light_pos, north_traffic_light_width, 5))
 
-    # West traffic lights
-    # West-straight traffic light
-    west_traffic_light_pos_straight = (intersection_center[0] - road_width // 2 - intersection_trl_width, intersection_center[1])
-    pygame.draw.rect(screen, RED_TR, (*west_traffic_light_pos_straight, 5, traffic_light_width))
-    # West-left traffic light
-    west_traffic_light_pos_left = (west_traffic_light_pos_straight[0], west_traffic_light_pos_straight[1] - traffic_light_width)
-    pygame.draw.rect(screen, GREEN_TR, (*west_traffic_light_pos_left, 5, traffic_light_width))
+    # South traffic light
+    south_traffic_light_width = traffic_light_width * 2
+    south_traffic_light_pos = (intersection_center[0] - south_traffic_light_width // 2, intersection_center[1] + road_width // 2 - 5 + intersection_trl_width)
+    pygame.draw.rect(screen, south_color, (*south_traffic_light_pos, south_traffic_light_width, 5))
+
+    # East traffic light
+    east_traffic_light_height = traffic_light_width * 2
+    east_traffic_light_pos = (intersection_center[0] + road_width // 2 + intersection_trl_width, intersection_center[1] - east_traffic_light_height // 2)
+    pygame.draw.rect(screen, east_color, (*east_traffic_light_pos, 5, east_traffic_light_height))
+
+    # West traffic light
+    west_traffic_light_height = traffic_light_width * 2
+    west_traffic_light_pos = (intersection_center[0] - road_width // 2 - intersection_trl_width, intersection_center[1] - west_traffic_light_height // 2)
+    pygame.draw.rect(screen, west_color, (*west_traffic_light_pos, 5, west_traffic_light_height))
+
+
 
 
 def draw_crossings(screen):
@@ -122,14 +142,13 @@ def main():
                 running = False
 
         draw_intersection(screen)
-        draw_traffic_lights(screen)
+        draw_traffic_lights(screen, starting_traffic_light)
         draw_crossings(screen)
         pygame.display.flip()
 
 
 if __name__ == "__main__":
     main()
-
 
 pygame.quit()
 sys.exit()
