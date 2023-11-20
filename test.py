@@ -45,88 +45,123 @@ traffic_light_change_times = {
 }
 
 
-def draw_intersection(screen):
-    # green background
-    screen.fill(GREEN)
-    font = pygame.font.SysFont(None, 36)
+class Intersection:
+    def __init__(self, screen, center, road_width):
+        self.screen = screen
+        self.center = center
+        self.road_width = road_width
+        self.font = pygame.font.SysFont(None, 36)
 
-    # drawing the vertical road
-    pygame.draw.rect(screen, BLACK, (intersection_center[0] - road_width // 2, 0, road_width, height))
-    # drawing the horizontal road
-    pygame.draw.rect(screen, BLACK, (0, intersection_center[1] - road_width // 2, width, road_width))
+    def draw(self):
+        # Fill background with green
+        self.screen.fill(GREEN)
 
-    # drawing lanes for each road
-    # west lane and naming it
-    pygame.draw.line(screen, YELLOW, (0, intersection_center[1]),
-                     (intersection_center[0] - road_width // 2, intersection_center[1]), 2)
-    text = font.render('West', True, WHITE)
-    screen.blit(text, (intersection_center[0] // 2, intersection_center[1] - 10))
-    # east lane and naming it
-    pygame.draw.line(screen, YELLOW, (intersection_center[0] + road_width // 2, intersection_center[1]),
-                     (width, intersection_center[1]), 2)
-    text = font.render('East', True, WHITE)
-    screen.blit(text, (intersection_center[0] // 2 + intersection_center[0], intersection_center[1] - 10))
-    # north lane
-    pygame.draw.line(screen, YELLOW, (intersection_center[0], 0),
-                     (intersection_center[0], intersection_center[1] - road_width // 2), 2)
-    text = font.render('North', True, WHITE)
-    screen.blit(text, (intersection_center[0] - 30, intersection_center[1] // 2))
-    # south lane
-    pygame.draw.line(screen, YELLOW, (intersection_center[0], intersection_center[1] + road_width // 2),
-                     (intersection_center[0], height), 2)
-    text = font.render('South', True, WHITE)
-    screen.blit(text, (intersection_center[0] - 30, intersection_center[1] // 2 + intersection_center[1]))
+        # Drawing the vertical road
+        pygame.draw.rect(self.screen, BLACK, (self.center[0] - self.road_width // 2, 0, self.road_width, height))
+
+        # Drawing the horizontal road
+        pygame.draw.rect(self.screen, BLACK, (0, self.center[1] - self.road_width // 2, width, self.road_width))
+
+        # Drawing lanes for each road and naming them
+        # West lane
+        pygame.draw.line(self.screen, YELLOW, (0, self.center[1]),
+                         (self.center[0] - self.road_width // 2, self.center[1]), 2)
+        text = self.font.render('West', True, WHITE)
+        self.screen.blit(text, (self.center[0] // 2, self.center[1] - 10))
+
+        # East lane
+        pygame.draw.line(self.screen, YELLOW, (self.center[0] + self.road_width // 2, self.center[1]),
+                         (width, self.center[1]), 2)
+        text = self.font.render('East', True, WHITE)
+        self.screen.blit(text, (self.center[0] // 2 + self.center[0], self.center[1] - 10))
+
+        # North lane
+        pygame.draw.line(self.screen, YELLOW, (self.center[0], 0),
+                         (self.center[0], self.center[1] - self.road_width // 2), 2)
+        text = self.font.render('North', True, WHITE)
+        self.screen.blit(text, (self.center[0] - 30, self.center[1] // 2))
+
+        # South lane
+        pygame.draw.line(self.screen, YELLOW, (self.center[0], self.center[1] + self.road_width // 2),
+                         (self.center[0], height), 2)
+        text = self.font.render('South', True, WHITE)
+        self.screen.blit(text, (self.center[0] - 30, self.center[1] // 2 + self.center[1]))
 
 
-def draw_traffic_lights(screen, current_traffic_light, current_light_state):
-    # Initialize all traffic lights to red
-    north_color = RED_TR
-    south_color = RED_TR
-    east_color = RED_TR
-    west_color = RED_TR
+class TrafficLights:
+    def __init__(self, screen, current_traffic_light, current_light_state):
+        self.screen = screen
+        self.current_traffic_light_index = traffic_lights_directions.index(current_traffic_light)
+        self.current_light_state = current_light_state
+        self.last_change_time = pygame.time.get_ticks()
 
-    # Determine the color based on current state
-    if current_light_state == "GREEN":
-        light_color = GREEN_TR
-    elif current_light_state == "YELLOW":
-        light_color = YELLOW_TR
-    elif current_light_state == "RED":
-        light_color = RED_TR
+    def draw(self):
+        # Initialize all traffic lights to red
+        north_color = RED_TR
+        south_color = RED_TR
+        east_color = RED_TR
+        west_color = RED_TR
 
-    # Set the color of the current traffic light
-    if current_traffic_light == "north":
-        north_color = light_color
-    elif current_traffic_light == "south":
-        south_color = light_color
-    elif current_traffic_light == "east":
-        east_color = light_color
-    elif current_traffic_light == "west":
-        west_color = light_color
+        # Determine the color based on current state
+        if self.current_light_state == "GREEN":
+            light_color = GREEN_TR
+        elif self.current_light_state == "YELLOW":
+            light_color = YELLOW_TR
+        elif self.current_light_state == "RED":
+            light_color = RED_TR
 
-    # Drawing traffic lights with the updated colors
-    # North traffic light
-    north_traffic_light_width = traffic_light_width * 2
-    north_traffic_light_pos = (intersection_center[0] - north_traffic_light_width // 2,
-                               intersection_center[1] - road_width // 2 - intersection_trl_width)
-    pygame.draw.rect(screen, north_color, (*north_traffic_light_pos, north_traffic_light_width, 5))
+        # Set the color of the current traffic light
+        if self.current_traffic_light == "north":
+            north_color = light_color
+        elif self.current_traffic_light == "south":
+            south_color = light_color
+        elif self.current_traffic_light == "east":
+            east_color = light_color
+        elif self.current_traffic_light == "west":
+            west_color = light_color
 
-    # South traffic light
-    south_traffic_light_width = traffic_light_width * 2
-    south_traffic_light_pos = (intersection_center[0] - south_traffic_light_width // 2,
-                               intersection_center[1] + road_width // 2 - 5 + intersection_trl_width)
-    pygame.draw.rect(screen, south_color, (*south_traffic_light_pos, south_traffic_light_width, 5))
+        # Drawing traffic lights with the updated colors
+        # North traffic light
+        north_traffic_light_width = traffic_light_width * 2
+        north_traffic_light_pos = (intersection_center[0] - north_traffic_light_width // 2,
+                                   intersection_center[1] - road_width // 2 - intersection_trl_width)
+        pygame.draw.rect(screen, north_color, (*north_traffic_light_pos, north_traffic_light_width, 5))
 
-    # East traffic light
-    east_traffic_light_height = traffic_light_width * 2
-    east_traffic_light_pos = (intersection_center[0] + road_width // 2 + intersection_trl_width,
-                              intersection_center[1] - east_traffic_light_height // 2)
-    pygame.draw.rect(screen, east_color, (*east_traffic_light_pos, 5, east_traffic_light_height))
+        # South traffic light
+        south_traffic_light_width = traffic_light_width * 2
+        south_traffic_light_pos = (intersection_center[0] - south_traffic_light_width // 2,
+                                   intersection_center[1] + road_width // 2 - 5 + intersection_trl_width)
+        pygame.draw.rect(screen, south_color, (*south_traffic_light_pos, south_traffic_light_width, 5))
 
-    # West traffic light
-    west_traffic_light_height = traffic_light_width * 2
-    west_traffic_light_pos = (intersection_center[0] - road_width // 2 - intersection_trl_width,
-                              intersection_center[1] - west_traffic_light_height // 2)
-    pygame.draw.rect(screen, west_color, (*west_traffic_light_pos, 5, west_traffic_light_height))
+        # East traffic light
+        east_traffic_light_height = traffic_light_width * 2
+        east_traffic_light_pos = (intersection_center[0] + road_width // 2 + intersection_trl_width,
+                                  intersection_center[1] - east_traffic_light_height // 2)
+        pygame.draw.rect(screen, east_color, (*east_traffic_light_pos, 5, east_traffic_light_height))
+
+        # West traffic light
+        west_traffic_light_height = traffic_light_width * 2
+        west_traffic_light_pos = (intersection_center[0] - road_width // 2 - intersection_trl_width,
+                                  intersection_center[1] - west_traffic_light_height // 2)
+        pygame.draw.rect(screen, west_color, (*west_traffic_light_pos, 5, west_traffic_light_height))
+
+    def update(self, current_time):
+        # Logic to change the state of the traffic lights
+        if self.current_light_state == "GREEN" and current_time - self.last_change_time >= traffic_light_change_times[
+            "GREEN"] * 1000:
+            self.current_light_state = "YELLOW"
+            self.last_change_time = current_time
+        elif self.current_light_state == "YELLOW" and current_time - self.last_change_time >= \
+                traffic_light_change_times["YELLOW"] * 1000:
+            self.current_light_state = "RED"
+            self.last_change_time = current_time
+            self.current_traffic_light_index = (self.current_traffic_light_index + 1) % len(traffic_lights_directions)
+        elif self.current_light_state == "RED" and current_time - self.last_change_time >= traffic_light_change_times[
+            "RED"] * 1000:
+            self.current_light_state = "GREEN"
+            self.last_change_time = current_time
+
+        self.current_traffic_light = traffic_lights_directions[self.current_traffic_light_index]
 
 
 def draw_crossings(screen):
@@ -152,26 +187,33 @@ def draw_crossings(screen):
     pygame.draw.rect(screen, GRAY, (south_crossing_x, south_crossing_y, road_width, 25))
 
 
-def draw_vehicle(screen, x, y, color, radius, width):
-    pygame.draw.circle(screen, color, [x, y], radius, width)
+class Vehicle:
+    def __init__(self, screen, x, y, radius, width, color, threshold, speed):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.width = width
+        self.color = color
+        self.threshold = threshold
+        self.speed = speed
 
+    def move(self):
+        if self.x < self.threshold:
+            self.x += self.speed
+        return self.x, self.y
 
-def move_vehicle(screen, threshold, x, y, vehicle_speed):
-    # Update the position of the vehicle if it has not yet reached the threshold
-    if x < threshold:
-        x += vehicle_speed
-    return x, y  # Return the updated position
+    def draw(self):
+        pygame.draw.circle(self.screen, self.color, [self.x, self.y], self.radius, self.width)
 
 
 def main():
     running = True
-    current_traffic_light_index = traffic_lights_directions.index(starting_traffic_light)
-    current_traffic_light = traffic_lights_directions[current_traffic_light_index]
+    intersection = Intersection(screen, intersection_center, road_width)
     current_light_state = "GREEN"
-    last_change_time = pygame.time.get_ticks()
-
-    vehicle_x = 0
-    vehicle_y = intersection_center[1] + road_width // 4
+    traffic_lights = TrafficLights(screen, starting_traffic_light, current_light_state)
+    vehicle = Vehicle(screen, 0, intersection_center[1] + road_width // 4, vehicle_radius, vehicle_width,
+                      vehicle_straight, west_threshold, vehicle_speed)
 
     while running:
         for event in pygame.event.get():
@@ -179,42 +221,22 @@ def main():
                 running = False
 
         current_time = pygame.time.get_ticks()
+        traffic_lights.update(current_time)
+        vehicle.move()
 
-        # Check if it's time to change the traffic light state
-        if current_light_state == "GREEN" and current_time - last_change_time >= traffic_light_change_times[
-            "GREEN"] * 1000:
-            current_light_state = "YELLOW"
-            last_change_time = current_time
-        elif current_light_state == "YELLOW" and current_time - last_change_time >= traffic_light_change_times[
-            "YELLOW"] * 1000:
-            current_light_state = "RED"
-            last_change_time = current_time
-            # Cycle to the next traffic light
-            current_traffic_light_index = (current_traffic_light_index + 1) % len(traffic_lights_directions)
-            current_traffic_light = traffic_lights_directions[current_traffic_light_index]
-        elif current_light_state == "RED" and current_time - last_change_time >= traffic_light_change_times[
-            "RED"] * 1000:
-            current_light_state = "GREEN"
-            last_change_time = current_time
-
-        vehicle_type = random.choice(vehicle_direction)
-
-        # if vehicle_type == "straight":
-        #     vehicle_color = vehicle_straight
-        # else:
-        #     vehicle_color = vehicle_right
-
-        vehicle_x, vehicle_y = move_vehicle(screen, west_threshold, vehicle_x, vehicle_y, vehicle_speed)
-        draw_intersection(screen)
-        draw_traffic_lights(screen, current_traffic_light, current_light_state)
+        intersection.draw()
+        traffic_lights.draw()
         draw_crossings(screen)
-        draw_vehicle(screen, vehicle_x, vehicle_y, vehicle_straight, vehicle_radius, vehicle_width)
-        move_vehicle(screen, west_threshold, vehicle_x, vehicle_y, vehicle_speed)
+        vehicle.draw()
+
         pygame.display.flip()
 
     pygame.quit()
     sys.exit()
 
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
