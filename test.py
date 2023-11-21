@@ -26,14 +26,12 @@ GRAY = (128, 128, 128)
 WHITE = (255, 255, 255)
 
 # crossing thresholds
-# west lane threshold
-west_threshold = intersection_center[0] - road_width // 2 - intersection_trl_width - 30
-# east lane threshold
-east_threshold = intersection_center[0] - road_width // 2 + road_width + intersection_trl_width + 30
-# north lane threshold
-north_threshold = intersection_center[1] - road_width + 20
-# south lane threshold
-south_threshold = intersection_center[1] + road_width - 20
+thresholds = {
+    "west": intersection_center[0] - road_width // 2 - intersection_trl_width - 30,
+    "east": intersection_center[0] - road_width // 2 + road_width + intersection_trl_width + 30,
+    "north": intersection_center[1] - road_width + 20,
+    "south": intersection_center[1] + road_width - 20
+}
 
 # traffic light parameters and colors
 YELLOW_TR = (255, 255, 0)
@@ -51,14 +49,13 @@ traffic_light_change_times = {
 '''vehicle parameters'''
 vehicle_radius = 15
 vehicle_width = 15
-# color of the vehicle that goes straight
-vehicle_straight = (255, 163, 60)
-# color of the vehicle that is going to take the left turn
-vehicle_left = (255, 251, 115)
 # vehicle speed
 vehicle_speed = 0.25
 # direction of a vehicle after the traffic light turns green
-vehicle_direction = ["straight", "right"]
+vehicle_direction_color = {
+    "straight": (255, 163, 60),
+    "left": (255, 251, 115)
+}
 # the direction from which a vehicle is generated
 vehicle_incoming_direction = ["north", "east", "south", "west"]
 
@@ -225,32 +222,58 @@ class TrafficLights:
 
 
 class Vehicle:
-    def __init__(self, screen, x, y, radius, width, color, threshold, speed):
+    def __init__(self, screen, radius, width, speed):
         self.screen = screen
-        self.x = x
-        self.y = y
         self.radius = radius
         self.width = width
-        self.color = color
-        self.threshold = threshold
         self.speed = speed
+        self.x = None
+        self.y = None
+        self.direction = None
+        self.color = None
+        self.moving = True
 
-    def generate_vehicle(self):
-        pass
+    def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color):
+        self.direction = random.choice(vehicle_incoming_direction)
+        self.x, self.y = vehicle_spawn_coords[self.direction]
+        out_going_direction = random.choice(["straight", "left"])
+        self.color = vehicle_direction_color[out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state):
-        # print(f"Current Traffic Light : {current_traffic_light}")
-        # print(f"Current Light State: {current_light_state}")
+    def move(self, current_traffic_light, current_light_state, thresholds):
+        threshold = thresholds[self.direction]
 
-        # if current_light_state in ["YELLOW", "RED"] and current_traffic_light != "west":
-        #     if self.x < self.threshold:
-        #         self.x += self.speed
-        # the vehicle finally stops!!!!!!!!!!
-        if current_traffic_light == "west" and current_light_state == 'GREEN':
-            self.x += self.speed
-        else:
-            if self.x < self.threshold:
+        # For vehicle coming from the west
+        if self.direction == "west":
+            if current_traffic_light == "west" and current_light_state == 'GREEN':
                 self.x += self.speed
+            else:
+                if self.x < threshold:
+                    self.x += self.speed
+
+        # For vehicle coming from the east
+        elif self.direction == "east":
+            if current_traffic_light == "east" and current_light_state == 'GREEN':
+                self.x -= self.speed
+            else:
+                if self.x > threshold:
+                    self.x -= self.speed
+
+        # For vehicle coming from the north
+        elif self.direction == "north":
+            if current_traffic_light == "north" and current_light_state == 'GREEN':
+                self.y -= self.speed
+            else:
+                if self.y > threshold:
+                    self.y -= self.speed
+
+        # For vehicle coming from the south
+        elif self.direction == "south":
+            if current_traffic_light == "south" and current_light_state == 'GREEN':
+                self.y += self.speed
+            else:
+                if self.y < threshold:
+                    self.y += self.speed
+
         return self.x, self.y
 
     def draw(self):
@@ -263,8 +286,10 @@ def main():
     crossing = Crossing(screen, intersection_center, road_width, intersection_trl_width)
     current_light_state = "GREEN"
     traffic_lights = TrafficLights(screen, starting_traffic_light, current_light_state)
-    vehicle = Vehicle(screen, 0, intersection_center[1] + road_width // 4, vehicle_radius, vehicle_width,
-                      vehicle_straight, west_threshold, vehicle_speed)
+
+    # Create the vehicle once before the loop
+    vehicle = Vehicle(screen, vehicle_radius, vehicle_width, vehicle_speed)
+    vehicle.generate_vehicle(vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color)
 
     while running:
         for event in pygame.event.get():
@@ -273,12 +298,13 @@ def main():
 
         current_time = pygame.time.get_ticks()
         current_traffic_light, current_light_state = traffic_lights.update(current_time)
-        vehicle.move(current_traffic_light, current_light_state)
+
+        # Move and draw the vehicle
+        vehicle.move(current_traffic_light, current_light_state, thresholds)
         intersection.draw()
         traffic_lights.draw()
         crossing.draw()
         vehicle.draw()
-        pygame.draw.circle(screen, RED, vehicle_spawn_coords["south"], 15, 15)
         pygame.display.flip()
 
     pygame.quit()
