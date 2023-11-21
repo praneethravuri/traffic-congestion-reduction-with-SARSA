@@ -12,15 +12,25 @@ screen = pygame.display.set_mode((width, height))
 # vehicle parameters
 vehicle_radius = 15
 vehicle_width = 15
+# color of the vehicle that goes straight
 vehicle_straight = (255, 163, 60)
-vehicle_right = (255, 251, 115)
+# color of the vehicle that is going to take the left turn
+vehicle_left = (255, 251, 115)
+# vehicle speed
 vehicle_speed = 0.25
+# direction of a vehicle after the traffic light turns green
 vehicle_direction = ["straight", "right"]
+# the direction from which a vehicle is generated
+vehicle_incoming_direction = ["north", "east", "south", "west"]
 
 # Intersection parameters and colors
+# width of the road
 road_width = 150
+# width of the traffic light
 traffic_light_width = road_width // 2
+# center of the intersection
 intersection_center = (width // 2, height // 2)
+# distance from the center of the intersection to the center of the traffic light
 intersection_trl_width = 30
 BLACK = (0, 0, 0)
 GREEN = (0, 158, 96)
@@ -30,9 +40,13 @@ GRAY = (128, 128, 128)
 WHITE = (255, 255, 255)
 
 # crossing thresholds
+# west lane threshold
 west_threshold = intersection_center[0] - road_width // 2 - intersection_trl_width - 30
+# east lane threshold
 east_threshold = intersection_center[0] - road_width // 2 + road_width + intersection_trl_width + 30
+# north lane threshold
 north_threshold = intersection_center[1] - road_width + 20
+# south lane threshold
 south_threshold = intersection_center[1] + road_width - 20
 
 # traffic light parameters and colors
@@ -40,6 +54,7 @@ YELLOW_TR = (255, 255, 0)
 GREEN_TR = (78, 228, 78)
 RED_TR = (255, 0, 0)
 traffic_lights_directions = ["north", "east", "south", "west"]
+# creating the starting point for the traffic light rotation
 starting_traffic_light = random.choice(traffic_lights_directions)
 traffic_light_change_times = {
     "RED": 7,
