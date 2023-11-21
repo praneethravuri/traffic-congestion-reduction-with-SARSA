@@ -31,6 +31,9 @@ WHITE = (255, 255, 255)
 
 # crossing thresholds
 west_threshold = intersection_center[0] - road_width // 2 - intersection_trl_width - 30
+east_threshold = intersection_center[0] - road_width // 2 + road_width + intersection_trl_width + 30
+north_threshold = intersection_center[1] - road_width + 20
+south_threshold = intersection_center[1] + road_width - 20
 
 # traffic light parameters and colors
 YELLOW_TR = (255, 255, 0)
