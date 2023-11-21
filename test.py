@@ -9,20 +9,6 @@ pygame.font.init()
 width, height = 1000, 800
 screen = pygame.display.set_mode((width, height))
 
-# vehicle parameters
-vehicle_radius = 15
-vehicle_width = 15
-# color of the vehicle that goes straight
-vehicle_straight = (255, 163, 60)
-# color of the vehicle that is going to take the left turn
-vehicle_left = (255, 251, 115)
-# vehicle speed
-vehicle_speed = 0.25
-# direction of a vehicle after the traffic light turns green
-vehicle_direction = ["straight", "right"]
-# the direction from which a vehicle is generated
-vehicle_incoming_direction = ["north", "east", "south", "west"]
-
 # Intersection parameters and colors
 # width of the road
 road_width = 150
@@ -60,6 +46,28 @@ traffic_light_change_times = {
     "RED": 7,
     "GREEN": 7,
     "YELLOW": 3
+}
+
+'''vehicle parameters'''
+vehicle_radius = 15
+vehicle_width = 15
+# color of the vehicle that goes straight
+vehicle_straight = (255, 163, 60)
+# color of the vehicle that is going to take the left turn
+vehicle_left = (255, 251, 115)
+# vehicle speed
+vehicle_speed = 0.25
+# direction of a vehicle after the traffic light turns green
+vehicle_direction = ["straight", "right"]
+# the direction from which a vehicle is generated
+vehicle_incoming_direction = ["north", "east", "south", "west"]
+
+# vehicle spawn coordinates
+vehicle_spawn_coords = {
+    "west": [0, intersection_center[1] + road_width // 4],
+    "east": [2 * intersection_center[0], intersection_center[1] - road_width // 4],
+    "north": [intersection_center[0] - road_width // 4, 0],
+    "south": [intersection_center[0] + road_width // 4, 2 * intersection_center[1]]
 }
 
 
@@ -227,6 +235,9 @@ class Vehicle:
         self.threshold = threshold
         self.speed = speed
 
+    def generate_vehicle(self):
+        pass
+
     def move(self, current_traffic_light, current_light_state):
         # print(f"Current Traffic Light : {current_traffic_light}")
         # print(f"Current Light State: {current_light_state}")
@@ -267,7 +278,7 @@ def main():
         traffic_lights.draw()
         crossing.draw()
         vehicle.draw()
-
+        pygame.draw.circle(screen, RED, vehicle_spawn_coords["south"], 15, 15)
         pygame.display.flip()
 
     pygame.quit()
