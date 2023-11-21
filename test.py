@@ -88,6 +88,38 @@ class Intersection:
         self.screen.blit(text, (self.center[0] - 30, self.center[1] // 2 + self.center[1]))
 
 
+class Crossing:
+
+    def __init__(self, screen, intersection_center, road_width, intersection_trl_width):
+        self.screen = screen
+        self.intersection_center = intersection_center
+        self.road_width = road_width
+        self.intersection_trl_width = intersection_trl_width  # Width for the traffic light region (assuming this is what it stands for)
+
+    def draw(self):
+        # Crossing parameters for the west lane
+        west_crossing_x = self.intersection_center[0] - self.road_width // 2 - 25
+        west_crossing_y = self.intersection_center[1] - self.road_width // 2
+        pygame.draw.rect(self.screen, GRAY,
+                         (west_crossing_x, west_crossing_y, self.intersection_trl_width, self.road_width))
+
+        # Crossing for the east lane
+        east_crossing_x = self.intersection_center[0] + self.road_width // 2
+        east_crossing_y = west_crossing_y
+        pygame.draw.rect(self.screen, GRAY,
+                         (east_crossing_x, east_crossing_y, self.intersection_trl_width, self.road_width))
+
+        # Crossing for the north lane
+        north_crossing_x = self.intersection_center[0] - self.road_width // 2
+        north_crossing_y = self.intersection_center[1] - self.road_width // 2 - 25
+        pygame.draw.rect(self.screen, GRAY, (north_crossing_x, north_crossing_y, self.road_width, 25))
+
+        # Crossing for the south lane
+        south_crossing_x = north_crossing_x
+        south_crossing_y = self.intersection_center[1] + self.road_width // 2
+        pygame.draw.rect(self.screen, GRAY, (south_crossing_x, south_crossing_y, self.road_width, 25))
+
+
 class TrafficLights:
     def __init__(self, screen, current_traffic_light, current_light_state):
         self.screen = screen
@@ -164,29 +196,6 @@ class TrafficLights:
         self.current_traffic_light = traffic_lights_directions[self.current_traffic_light_index]
 
 
-def draw_crossings(screen):
-    # Crossing parameters for the west lane
-    # crossing for the west lane
-    west_crossing_x = intersection_center[0] - road_width // 2 - 25
-    west_crossing_y = intersection_center[1] - road_width // 2
-    pygame.draw.rect(screen, GRAY, (west_crossing_x, west_crossing_y, intersection_trl_width, road_width))
-
-    # crossing for the east lane
-    east_crossing_x = intersection_center[0] + road_width // 2
-    east_crossing_y = west_crossing_y
-    pygame.draw.rect(screen, GRAY, (east_crossing_x, east_crossing_y, intersection_trl_width, road_width))
-
-    # crossing for the north lane
-    north_crossing_x = intersection_center[0] - road_width // 2
-    north_crossing_y = intersection_center[1] - road_width // 2 - 25
-    pygame.draw.rect(screen, GRAY, (north_crossing_x, north_crossing_y, road_width, 25))
-
-    # crossing for the south lane
-    south_crossing_x = north_crossing_x
-    south_crossing_y = intersection_center[1] - road_width // 2 + 125
-    pygame.draw.rect(screen, GRAY, (south_crossing_x, south_crossing_y, road_width, 25))
-
-
 class Vehicle:
     def __init__(self, screen, x, y, radius, width, color, threshold, speed):
         self.screen = screen
@@ -210,6 +219,7 @@ class Vehicle:
 def main():
     running = True
     intersection = Intersection(screen, intersection_center, road_width)
+    crossing = Crossing(screen, intersection_center, road_width, intersection_trl_width)
     current_light_state = "GREEN"
     traffic_lights = TrafficLights(screen, starting_traffic_light, current_light_state)
     vehicle = Vehicle(screen, 0, intersection_center[1] + road_width // 4, vehicle_radius, vehicle_width,
@@ -226,7 +236,7 @@ def main():
 
         intersection.draw()
         traffic_lights.draw()
-        draw_crossings(screen)
+        crossing.draw()
         vehicle.draw()
 
         pygame.display.flip()
@@ -234,9 +244,6 @@ def main():
     pygame.quit()
     sys.exit()
 
-
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()
