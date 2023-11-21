@@ -18,12 +18,12 @@ vehicle_speed = 0.25
 vehicle_direction = ["straight", "right"]
 
 # Intersection parameters and colors
-road_width = 125
+road_width = 150
 traffic_light_width = road_width // 2
 intersection_center = (width // 2, height // 2)
 intersection_trl_width = 30
 BLACK = (0, 0, 0)
-GREEN = (0, 128, 0)
+GREEN = (0, 158, 96)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 GRAY = (128, 128, 128)
@@ -98,7 +98,7 @@ class Crossing:
 
     def draw(self):
         # Crossing parameters for the west lane
-        west_crossing_x = self.intersection_center[0] - self.road_width // 2 - 25
+        west_crossing_x = self.intersection_center[0] - self.road_width // 2 - 25 - 5
         west_crossing_y = self.intersection_center[1] - self.road_width // 2
         pygame.draw.rect(self.screen, GRAY,
                          (west_crossing_x, west_crossing_y, self.intersection_trl_width, self.road_width))
@@ -173,7 +173,7 @@ class TrafficLights:
 
         # West traffic light
         west_traffic_light_height = traffic_light_width * 2
-        west_traffic_light_pos = (intersection_center[0] - road_width // 2 - intersection_trl_width,
+        west_traffic_light_pos = (intersection_center[0] - road_width // 2 - intersection_trl_width - 5,
                                   intersection_center[1] - west_traffic_light_height // 2)
         pygame.draw.rect(screen, west_color, (*west_traffic_light_pos, 5, west_traffic_light_height))
 
@@ -195,6 +195,8 @@ class TrafficLights:
 
         self.current_traffic_light = traffic_lights_directions[self.current_traffic_light_index]
 
+        return self.current_traffic_light, self.current_light_state
+
 
 class Vehicle:
     def __init__(self, screen, x, y, radius, width, color, threshold, speed):
@@ -207,9 +209,19 @@ class Vehicle:
         self.threshold = threshold
         self.speed = speed
 
-    def move(self):
-        if self.x < self.threshold:
+    def move(self, current_traffic_light, current_light_state):
+        # print(f"Current Traffic Light : {current_traffic_light}")
+        # print(f"Current Light State: {current_light_state}")
+
+        # if current_light_state in ["YELLOW", "RED"] and current_traffic_light != "west":
+        #     if self.x < self.threshold:
+        #         self.x += self.speed
+        # the vehicle finally stops!!!!!!!!!!
+        if current_traffic_light == "west" and current_light_state == 'GREEN':
             self.x += self.speed
+        else:
+            if self.x < self.threshold:
+                self.x += self.speed
         return self.x, self.y
 
     def draw(self):
@@ -231,9 +243,8 @@ def main():
                 running = False
 
         current_time = pygame.time.get_ticks()
-        traffic_lights.update(current_time)
-        vehicle.move()
-
+        current_traffic_light, current_light_state = traffic_lights.update(current_time)
+        vehicle.move(current_traffic_light, current_light_state)
         intersection.draw()
         traffic_lights.draw()
         crossing.draw()
