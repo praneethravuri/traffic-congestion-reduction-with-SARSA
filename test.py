@@ -1,7 +1,6 @@
 import pygame
 import sys
 import random
-import time
 
 pygame.init()
 pygame.font.init()
@@ -17,7 +16,7 @@ traffic_light_width = road_width // 2
 # center of the intersection
 intersection_center = (width // 2, height // 2)
 # distance from the center of the intersection to the center of the traffic light
-intersection_trl_width = 30
+intersection_trl_width = road_width//5
 BLACK = (0, 0, 0)
 GREEN = (0, 158, 96)
 RED = (255, 0, 0)
@@ -29,8 +28,8 @@ WHITE = (255, 255, 255)
 thresholds = {
     "west": intersection_center[0] - road_width // 2 - intersection_trl_width - 30,
     "east": intersection_center[0] - road_width // 2 + road_width + intersection_trl_width + 30,
-    "north": intersection_center[1] - road_width + 20,
-    "south": intersection_center[1] + road_width - 20
+    "north": intersection_center[1] - road_width//2 - intersection_trl_width - 30,
+    "south": intersection_center[1] + road_width - 15
 }
 
 # traffic light parameters and colors
@@ -241,7 +240,7 @@ class Vehicle:
 
     def move(self, current_traffic_light, current_light_state, thresholds):
         threshold = thresholds[self.direction]
-
+        print(f"Threshold value: {threshold}")
         # For vehicle coming from the west
         if self.direction == "west":
             if current_traffic_light == "west" and current_light_state == 'GREEN':
@@ -261,18 +260,21 @@ class Vehicle:
         # For vehicle coming from the north
         elif self.direction == "north":
             if current_traffic_light == "north" and current_light_state == 'GREEN':
+                self.y += self.speed
+            else:
+                if self.y < threshold:
+                    self.y += self.speed
+
+        # For vehicle coming from the south
+        elif self.direction == "south":
+            if current_traffic_light == "south" and current_light_state == 'GREEN':
                 self.y -= self.speed
             else:
                 if self.y > threshold:
                     self.y -= self.speed
 
-        # For vehicle coming from the south
-        elif self.direction == "south":
-            if current_traffic_light == "south" and current_light_state == 'GREEN':
-                self.y += self.speed
-            else:
-                if self.y < threshold:
-                    self.y += self.speed
+        print(f"Direction: {self.direction}")
+        print(f"X: {self.x} | Y: {self.y}")
 
         return self.x, self.y
 
@@ -305,6 +307,9 @@ def main():
         traffic_lights.draw()
         crossing.draw()
         vehicle.draw()
+
+        pygame.draw.circle(screen, RED, [500, thresholds["south"]], 10, 10)
+
         pygame.display.flip()
 
     pygame.quit()
