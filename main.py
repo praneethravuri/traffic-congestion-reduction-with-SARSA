@@ -5,14 +5,14 @@ import time
 
 
 class Intersection:
-    def __init__(self, screen, center, road_width, intersection_colors, width, height):
+    def __init__(self, screen, center, road_width, intersection_colors, width, height, font):
         self.screen = screen
         self.center = center
         self.road_width = road_width
         self.intersection_colors = intersection_colors
         self.width = width
         self.height = height
-        self.font = pygame.font.SysFont(None, 36)
+        self.font = font
 
     def draw(self):
         # Fill background with green
@@ -111,6 +111,8 @@ class TrafficLights:
         south_color = self.trl_colors["RED_TR"]
         east_color = self.trl_colors["RED_TR"]
         west_color = self.trl_colors["RED_TR"]
+
+        light_color = None
 
         # Determine the color based on current state
         if self.current_light_state == "GREEN":
@@ -306,6 +308,10 @@ class Vehicle:
 
 class SARSA:
     def __init__(self):
+
+        pygame.init()
+        pygame.font.init()
+
         self.width, self.height = 1000, 800
         self.screen = pygame.display.set_mode((self.width, self.height))
         # Intersection parameters and colors
@@ -389,6 +395,7 @@ class SARSA:
         }
 
         self.vehicle_list = []
+        self.font = pygame.font.SysFont(name=None, size=36)
 
     def vehicle_generator(self, screen, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
@@ -400,14 +407,13 @@ class SARSA:
             time.sleep(0.5)
 
     def run(self):
-        pygame.init()
-        pygame.font.init()
+
         # Set up the display
         screen = pygame.display.set_mode((self.width, self.height))
 
         # Create Intersection, Crossing, and Traffic Lights
         intersection = Intersection(screen, self.intersection_center, self.road_width, self.intersection_colors,
-                                    self.width, self.height)
+                                    self.width, self.height, self.font)
         crossing = Crossing(screen, self.intersection_center, self.road_width, self.intersection_trl_width,
                             self.intersection_colors)
         current_light_state = "GREEN"
