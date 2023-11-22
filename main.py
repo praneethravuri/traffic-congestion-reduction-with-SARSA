@@ -66,18 +66,19 @@ vehicle_spawn_coords = {
     "south": [intersection_center[0] + road_width // 4, 2 * intersection_center[1]]
 }
 
-vehicle_turning_points_left = {
-    "west": intersection_center[0] + road_width // 4,
-    "north": intersection_center[1] + road_width // 4,
-    "east": intersection_center[0] - road_width // 4,
-    "south": intersection_center[1] - road_width // 4
-}
-
-vehicle_turning_points_right = {
-    "west": intersection_center[0] - road_width // 4,
-    "north": intersection_center[1] - road_width // 4,
-    "east": intersection_center[0] + road_width // 4,
-    "south": intersection_center[1] + road_width // 4
+vehicle_turning_points = {
+    "left": {
+        "west": intersection_center[0] + road_width // 4,
+        "north": intersection_center[1] + road_width // 4,
+        "east": intersection_center[0] - road_width // 4,
+        "south": intersection_center[1] - road_width // 4
+    },
+    "right": {
+        "west": intersection_center[0] - road_width // 4,
+        "north": intersection_center[1] - road_width // 4,
+        "east": intersection_center[0] + road_width // 4,
+        "south": intersection_center[1] + road_width // 4
+    }
 }
 
 
@@ -253,15 +254,14 @@ class Vehicle:
         self.out_going_direction = random.choice(["straight", "left", "right"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points_left,
-             vehicle_turning_points_right):
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
         threshold = thresholds[self.direction]
         print(f"Threshold value: {threshold}")
         print(f"Outgoing direction: {self.out_going_direction}")
         if self.out_going_direction == "left":
-            current_turning_point = vehicle_turning_points_left[self.direction]
+            current_turning_point = vehicle_turning_points["left"][self.direction]
         else:
-            current_turning_point = vehicle_turning_points_right[self.direction]
+            current_turning_point = vehicle_turning_points["right"][self.direction]
 
         # For vehicle coming from the west
         if self.direction == "west":
@@ -376,7 +376,7 @@ def main():
         current_traffic_light, current_light_state = traffic_lights.update(current_time)
 
         # Move the vehicle
-        vehicle.move(current_traffic_light, current_light_state, thresholds, vehicle_turning_points_left, vehicle_turning_points_right)
+        vehicle.move(current_traffic_light, current_light_state, thresholds, vehicle_turning_points)
 
         # Check if the vehicle is out of bounds and generate a new one if needed
         if vehicle.kill_vehicle():
@@ -394,7 +394,6 @@ def main():
 
     pygame.quit()
     sys.exit()
-
 
 
 if __name__ == "__main__":
