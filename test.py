@@ -245,10 +245,11 @@ class Vehicle:
         self.out_going_direction = random.choice(["straight", "left"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state, thresholds):
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
         threshold = thresholds[self.direction]
         print(f"Threshold value: {threshold}")
         print(f"Outgoing direction: {self.out_going_direction}")
+        current_turning_point = vehicle_turning_points[self.direction]
 
         # For vehicle coming from the west
         if self.direction == "west":
@@ -256,7 +257,10 @@ class Vehicle:
                 if self.out_going_direction == "straight":
                     self.x += self.speed
                 else:
-                    print("do left here")
+                    if self.x < current_turning_point:
+                        self.x += self.speed
+                    else:
+                        self.y -= self.speed
             else:
                 if self.x < threshold:
                     self.x += self.speed
@@ -267,7 +271,10 @@ class Vehicle:
                 if self.out_going_direction == "straight":
                     self.x -= self.speed
                 else:
-                    print("do left here")
+                    if self.x > current_turning_point:
+                        self.x -= self.speed
+                    else:
+                        self.y += self.speed
             else:
                 if self.x > threshold:
                     self.x -= self.speed
@@ -278,7 +285,10 @@ class Vehicle:
                 if self.out_going_direction == "straight":
                     self.y += self.speed
                 else:
-                    print("do left here")
+                    if self.y < current_turning_point:
+                        self.y += self.speed
+                    else:
+                        self.x += self.speed
             else:
                 if self.y < threshold:
                     self.y += self.speed
@@ -289,7 +299,10 @@ class Vehicle:
                 if self.out_going_direction == "straight":
                     self.y -= self.speed
                 else:
-                    print("do left here")
+                    if self.y > current_turning_point:
+                        self.y -= self.speed
+                    else:
+                        self.x -= self.speed
             else:
                 if self.y > threshold:
                     self.y -= self.speed
@@ -325,13 +338,13 @@ def main():
         current_traffic_light, current_light_state = traffic_lights.update(current_time)
 
         # Move and draw the vehicle
-        vehicle.move(current_traffic_light, current_light_state, thresholds)
+        vehicle.move(current_traffic_light, current_light_state, thresholds, vehicle_turning_points)
         intersection.draw()
         traffic_lights.draw()
         crossing.draw()
         vehicle.draw()
 
-        pygame.draw.circle(screen, RED, [500, vehicle_turning_points["north"]], 10, 10)
+        # pygame.draw.circle(screen, RED, [500, vehicle_turning_points["north"]], 10, 10)
 
         pygame.display.flip()
 
