@@ -42,9 +42,9 @@ traffic_lights_directions = ["north", "east", "south", "west"]
 # creating the starting point for the traffic light rotation
 starting_traffic_light = random.choice(traffic_lights_directions)
 traffic_light_change_times = {
-    "RED": 2,
-    "GREEN": 2,
-    "YELLOW": 1
+    "RED": 5,
+    "GREEN": 5,
+    "YELLOW": 2
 }
 
 # vehicle parameters
@@ -258,8 +258,8 @@ class Vehicle:
 
     def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
         threshold = thresholds[self.direction]
-        print(f"Threshold value: {threshold}")
-        print(f"Outgoing direction: {self.out_going_direction}")
+        # print(f"Threshold value: {threshold}")
+        # print(f"Outgoing direction: {self.out_going_direction}")
         if self.out_going_direction == "left":
             current_turning_point = vehicle_turning_points["left"][self.direction]
         else:
@@ -369,7 +369,7 @@ def vehicle_generator(vehicle_list, vehicle_spawn_coords, vehicle_incoming_direc
         vehicle.generate_vehicle(vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color)
         with vehicle_list_lock:
             vehicle_list.append(vehicle)
-        time.sleep(1)  # Adjust this interval as needed
+        time.sleep(0.5)
 
 
 def main():
