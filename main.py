@@ -42,9 +42,9 @@ traffic_lights_directions = ["north", "east", "south", "west"]
 # creating the starting point for the traffic light rotation
 starting_traffic_light = random.choice(traffic_lights_directions)
 traffic_light_change_times = {
-    "RED": 5,
-    "GREEN": 5,
-    "YELLOW": 2
+    "RED": 2,
+    "GREEN": 2,
+    "YELLOW": 1
 }
 
 # vehicle parameters
@@ -267,7 +267,8 @@ class Vehicle:
 
         # For vehicle coming from the west
         if self.direction == "west":
-            if current_traffic_light == "west" and current_light_state == 'GREEN':
+            if (current_traffic_light == "west" and current_light_state == 'GREEN') or (
+                    current_light_state in ["YELLOW", "RED"] and self.x > threshold):
                 if self.out_going_direction == "straight":
                     self.x += self.speed
                 elif self.out_going_direction == "left":
@@ -280,16 +281,14 @@ class Vehicle:
                         self.x += self.speed
                     else:
                         self.y += self.speed
-
-            elif current_light_state in ["YELLOW", "RED"] and self.x > threshold:
-                self.x += self.speed
             else:
                 if self.x < threshold:
                     self.x += self.speed
 
         # For vehicle coming from the east
         elif self.direction == "east":
-            if current_traffic_light == "east" and current_light_state == 'GREEN':
+            if (current_traffic_light == "east" and current_light_state == 'GREEN') or (
+                    current_light_state in ["YELLOW", "RED"] and self.x < threshold):
                 if self.out_going_direction == "straight":
                     self.x -= self.speed
                 elif self.out_going_direction == "left":
@@ -303,15 +302,14 @@ class Vehicle:
                         self.x -= self.speed
                     else:
                         self.y -= self.speed
-            elif current_light_state in ["YELLOW", "RED"] and self.x < threshold:
-                self.x -= self.speed
             else:
                 if self.x > threshold:
                     self.x -= self.speed
 
         # For vehicle coming from the north
         elif self.direction == "north":
-            if current_traffic_light == "north" and current_light_state == 'GREEN':
+            if (current_traffic_light == "north" and current_light_state == 'GREEN') or (
+                    current_light_state in ["YELLOW", "RED"] and self.y > threshold):
                 if self.out_going_direction == "straight":
                     self.y += self.speed
                 elif self.out_going_direction == "left":
@@ -324,15 +322,14 @@ class Vehicle:
                         self.y += self.speed
                     else:
                         self.x -= self.speed
-            elif current_light_state in ["YELLOW", "RED"] and self.y > threshold:
-                self.y += self.speed
             else:
                 if self.y < threshold:
                     self.y += self.speed
 
         # For vehicle coming from the south
         elif self.direction == "south":
-            if current_traffic_light == "south" and current_light_state == 'GREEN':
+            if (current_traffic_light == "south" and current_light_state == 'GREEN') or (
+                    current_light_state in ["YELLOW", "RED"] and self.y < threshold):
                 if self.out_going_direction == "straight":
                     self.y -= self.speed
                 elif self.out_going_direction == "left":
@@ -345,8 +342,6 @@ class Vehicle:
                         self.y -= self.speed
                     else:
                         self.x += self.speed
-            elif current_light_state in ["YELLOW", "RED"] and self.y < threshold:
-                self.y -= self.speed
             else:
                 if self.y > threshold:
                     self.y -= self.speed
