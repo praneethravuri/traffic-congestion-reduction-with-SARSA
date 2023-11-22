@@ -280,6 +280,9 @@ class Vehicle:
                         self.x += self.speed
                     else:
                         self.y += self.speed
+
+            elif current_light_state in ["YELLOW", "RED"] and self.x > threshold:
+                self.x += self.speed
             else:
                 if self.x < threshold:
                     self.x += self.speed
@@ -300,6 +303,8 @@ class Vehicle:
                         self.x -= self.speed
                     else:
                         self.y -= self.speed
+            elif current_light_state in ["YELLOW", "RED"] and self.x < threshold:
+                self.x -= self.speed
             else:
                 if self.x > threshold:
                     self.x -= self.speed
@@ -319,6 +324,8 @@ class Vehicle:
                         self.y += self.speed
                     else:
                         self.x -= self.speed
+            elif current_light_state in ["YELLOW", "RED"] and self.y > threshold:
+                self.y += self.speed
             else:
                 if self.y < threshold:
                     self.y += self.speed
@@ -338,6 +345,8 @@ class Vehicle:
                         self.y -= self.speed
                     else:
                         self.x += self.speed
+            elif current_light_state in ["YELLOW", "RED"] and self.y < threshold:
+                self.y -= self.speed
             else:
                 if self.y > threshold:
                     self.y -= self.speed
