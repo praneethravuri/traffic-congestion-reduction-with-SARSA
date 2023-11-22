@@ -2,6 +2,7 @@ import pygame
 import random
 import threading
 import time
+import sys
 
 
 class Intersection:
@@ -290,14 +291,9 @@ class Vehicle:
                 if self.y > threshold:
                     self.y -= self.speed
 
-        # Debug information
-        # print(f"Direction: {self.direction}")
-        # print(f"X: {self.x} | Y: {self.y}")
-
         return self.x, self.y
 
     def draw(self):
-        # print(f"Color: {self.color}")
         pygame.draw.circle(self.screen, self.color, [self.x, self.y], self.radius, self.width)
 
     def kill_vehicle(self, width, height):
@@ -309,8 +305,11 @@ class Vehicle:
 class SARSA:
     def __init__(self):
 
-        pygame.init()
-        pygame.font.init()
+        try:
+            pygame.init()
+            pygame.font.init()
+        except pygame.error as e:
+            print(f"Error initializing Pygame: {e}")
 
         self.width, self.height = 1000, 800
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -429,38 +428,50 @@ class SARSA:
         # Start the vehicle generator thread
         vehicle_gen_thread = threading.Thread(target=self.vehicle_generator,
                                               args=(screen, stop_event, vehicle_list_lock))
-        vehicle_gen_thread.start()
+        try:
+            vehicle_gen_thread.start()
+        except RuntimeError as e:
+            print(f"Error starting thread: {e}")
 
         # Main loop
         running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+        try:
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                        sys.exit()
 
-            current_time = pygame.time.get_ticks()
-            current_traffic_light, current_light_state = traffic_lights.update(current_time)
+                current_time = pygame.time.get_ticks()
+                current_traffic_light, current_light_state = traffic_lights.update(current_time)
 
-            # Draw the intersection, traffic lights, and crossing
-            intersection.draw()
-            traffic_lights.draw()
-            crossing.draw()
+                # Draw the intersection, traffic lights, and crossing
+                intersection.draw()
+                traffic_lights.draw()
+                crossing.draw()
 
-            # Process and draw vehicles
-            with vehicle_list_lock:
-                for vehicle in self.vehicle_list:  # Note the use of self here
-                    vehicle.move(current_traffic_light, current_light_state, self.thresholds,
-                                 self.vehicle_turning_points)
-                    vehicle.draw()
-                    if vehicle.kill_vehicle(self.width, self.height):
-                        self.vehicle_list.remove(vehicle)
+                # Process and draw vehicles
+                with vehicle_list_lock:
+                    for vehicle in self.vehicle_list:  # Note the use of self here
+                        vehicle.move(current_traffic_light, current_light_state, self.thresholds,
+                                     self.vehicle_turning_points)
+                        vehicle.draw()
+                        if vehicle.kill_vehicle(self.width, self.height):
+                            self.vehicle_list.remove(vehicle)
 
-            pygame.display.flip()
+                pygame.display.flip()
+        except Exception as e:
+            print(f"Error during main loop: {e}")
+            sys.exit(1)
 
         # Clean up and exit
         stop_event.set()
         vehicle_gen_thread.join()
-        pygame.quit()
+        try:
+            pygame.quit()
+            sys.exit()
+        except pygame.error as e:
+            print(f"Error quitting Pygame: {e}")
 
 
 if __name__ == "__main__":
