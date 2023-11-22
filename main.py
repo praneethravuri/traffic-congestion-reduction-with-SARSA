@@ -1,6 +1,8 @@
 import pygame
 import sys
 import random
+import threading
+import time
 
 pygame.init()
 pygame.font.init()
@@ -40,16 +42,16 @@ traffic_lights_directions = ["north", "east", "south", "west"]
 # creating the starting point for the traffic light rotation
 starting_traffic_light = random.choice(traffic_lights_directions)
 traffic_light_change_times = {
-    "RED": 2,
-    "GREEN": 2,
-    "YELLOW": 1
+    "RED": 5,
+    "GREEN": 5,
+    "YELLOW": 2
 }
 
 # vehicle parameters
 vehicle_radius = 15
 vehicle_width = 15
 # vehicle speed
-vehicle_speed = 0.5
+vehicle_speed = 0.25
 # direction of a vehicle after the traffic light turns green
 vehicle_direction_color = {
     "straight": (255, 163, 60),
@@ -341,8 +343,8 @@ class Vehicle:
                     self.y -= self.speed
 
         # Debug information
-        print(f"Direction: {self.direction}")
-        print(f"X: {self.x} | Y: {self.y}")
+        # print(f"Direction: {self.direction}")
+        # print(f"X: {self.x} | Y: {self.y}")
 
         return self.x, self.y
 
@@ -356,16 +358,37 @@ class Vehicle:
         return out_of_bounds
 
 
+def vehicle_generator(vehicle_list, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
+                      stop_event, vehicle_list_lock):
+    while not stop_event.is_set():
+        vehicle = Vehicle(screen, vehicle_radius, vehicle_width, vehicle_speed)
+        vehicle.generate_vehicle(vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color)
+        with vehicle_list_lock:
+            vehicle_list.append(vehicle)
+        time.sleep(1)  # Adjust this interval as needed
+
+
 def main():
+    pygame.init()
+    pygame.font.init()
+
     running = True
+    screen = pygame.display.set_mode((width, height))
+    vehicle_list = []
+    vehicle_list_lock = threading.Lock()
+    stop_event = threading.Event()
+
     intersection = Intersection(screen, intersection_center, road_width)
     crossing = Crossing(screen, intersection_center, road_width, intersection_trl_width)
     current_light_state = "GREEN"
     traffic_lights = TrafficLights(screen, starting_traffic_light, current_light_state)
 
-    # Create the vehicle once before the loop
-    vehicle = Vehicle(screen, vehicle_radius, vehicle_width, vehicle_speed)
-    vehicle.generate_vehicle(vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color)
+    # Start the vehicle generator thread
+    # Start the vehicle generator thread
+    vehicle_gen_thread = threading.Thread(target=vehicle_generator, args=(
+        vehicle_list, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color, stop_event,
+        vehicle_list_lock))
+    vehicle_gen_thread.start()
 
     while running:
         for event in pygame.event.get():
@@ -375,22 +398,24 @@ def main():
         current_time = pygame.time.get_ticks()
         current_traffic_light, current_light_state = traffic_lights.update(current_time)
 
-        # Move the vehicle
-        vehicle.move(current_traffic_light, current_light_state, thresholds, vehicle_turning_points)
-
-        # Check if the vehicle is out of bounds and generate a new one if needed
-        if vehicle.kill_vehicle():
-            vehicle = Vehicle(screen, vehicle_radius, vehicle_width, vehicle_speed)
-            vehicle.generate_vehicle(vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color)
-
-        # Draw the intersection, traffic lights, crossing, and vehicle
+        # Draw the intersection, traffic lights, and crossing
         intersection.draw()
         traffic_lights.draw()
         crossing.draw()
-        vehicle.draw()
 
-        # Update the display
+        # Process and draw vehicles
+        with vehicle_list_lock:
+            for vehicle in vehicle_list:
+                vehicle.move(current_traffic_light, current_light_state, thresholds, vehicle_turning_points)
+                vehicle.draw()
+                if vehicle.kill_vehicle():
+                    vehicle_list.remove(vehicle)
+
         pygame.display.flip()
+
+    # Signal the vehicle generator thread to stop and wait for it to finish
+    stop_event.set()
+    vehicle_gen_thread.join()
 
     pygame.quit()
     sys.exit()
