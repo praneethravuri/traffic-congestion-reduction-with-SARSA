@@ -194,15 +194,18 @@ class Vehicle:
         self.color = None
         self.moving = True
         self.out_going_direction = None
+        self.lane = None
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color):
         self.direction = random.choice(vehicle_incoming_direction)
+        self.lane = self.direction
         self.x, self.y = vehicle_spawn_coords[self.direction]
         self.out_going_direction = random.choice(["straight", "left", "right"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, lane_counts):
         threshold = thresholds[self.direction]
+        print(f"Number of vehicles in each lane: {lane_counts}")
         # print(f"Threshold value: {threshold}")
         # print(f"Outgoing direction: {self.out_going_direction}")
         if self.out_going_direction == "left":
@@ -226,6 +229,7 @@ class Vehicle:
                         self.x += self.speed
                     else:
                         self.y += self.speed
+                lane_counts[self.direction] -= 1
             else:
                 if self.x < threshold:
                     self.x += self.speed
@@ -247,6 +251,7 @@ class Vehicle:
                         self.x -= self.speed
                     else:
                         self.y -= self.speed
+                lane_counts[self.direction] -= 1
             else:
                 if self.x > threshold:
                     self.x -= self.speed
@@ -267,6 +272,8 @@ class Vehicle:
                         self.y += self.speed
                     else:
                         self.x -= self.speed
+
+                lane_counts[self.direction] -= 1
             else:
                 if self.y < threshold:
                     self.y += self.speed
@@ -287,6 +294,8 @@ class Vehicle:
                         self.y -= self.speed
                     else:
                         self.x += self.speed
+
+                lane_counts[self.direction] -= 1
             else:
                 if self.y > threshold:
                     self.y -= self.speed
@@ -360,6 +369,7 @@ class SARSA:
         # vehicle parameters
         self.vehicle_radius = 15
         self.vehicle_width = 15
+        self.vehicle_gap = 15
         # vehicle speed
         self.vehicle_speed = 0.25
         # direction of a vehicle after the traffic light turns green
@@ -395,6 +405,15 @@ class SARSA:
 
         self.vehicle_list = []
         self.font = pygame.font.SysFont(name=None, size=36)
+        self.vehicle_list_lock = threading.Lock()
+        self.lane_counts = None
+
+    def count_vehicles(self):
+        self.lane_counts = {'north': 0, 'south': 0, 'east': 0, 'west': 0}
+        with self.vehicle_list_lock:
+            for vehicle in self.vehicle_list:
+                self.lane_counts[vehicle.lane] += 1
+        return self.lane_counts
 
     def vehicle_generator(self, screen, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
@@ -450,11 +469,14 @@ class SARSA:
                 traffic_lights.draw()
                 crossing.draw()
 
+                self.lane_counts = self.count_vehicles()
+                # print(f"Vehicles in each lane: {lane_counts}")
+
                 # Process and draw vehicles
                 with vehicle_list_lock:
                     for vehicle in self.vehicle_list:  # Note the use of self here
                         vehicle.move(current_traffic_light, current_light_state, self.thresholds,
-                                     self.vehicle_turning_points)
+                                     self.vehicle_turning_points, self.lane_counts)
                         vehicle.draw()
                         if vehicle.kill_vehicle(self.width, self.height):
                             self.vehicle_list.remove(vehicle)
