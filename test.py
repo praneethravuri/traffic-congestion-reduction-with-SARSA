@@ -18,7 +18,7 @@ intersection_center = (width // 2, height // 2)
 # distance from the center of the intersection to the center of the traffic light
 intersection_trl_width = road_width // 5
 BLACK = (0, 0, 0)
-GREEN = (0, 158, 96)
+GREEN = (26, 93, 26)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 GRAY = (128, 128, 128)
