@@ -40,9 +40,9 @@ traffic_lights_directions = ["north", "east", "south", "west"]
 # creating the starting point for the traffic light rotation
 starting_traffic_light = random.choice(traffic_lights_directions)
 traffic_light_change_times = {
-    "RED": 7,
-    "GREEN": 7,
-    "YELLOW": 3
+    "RED": 5,
+    "GREEN": 5,
+    "YELLOW": 2
 }
 
 # vehicle parameters
@@ -53,7 +53,8 @@ vehicle_speed = 0.25
 # direction of a vehicle after the traffic light turns green
 vehicle_direction_color = {
     "straight": (255, 163, 60),
-    "left": (135, 196, 255)
+    "left": (135, 196, 255),
+    "right": (255, 75, 145)
 }
 # the direction from which a vehicle is generated
 vehicle_incoming_direction = ["north", "east", "south", "west"]
@@ -65,11 +66,18 @@ vehicle_spawn_coords = {
     "south": [intersection_center[0] + road_width // 4, 2 * intersection_center[1]]
 }
 
-vehicle_turning_points = {
+vehicle_turning_points_left = {
     "west": intersection_center[0] + road_width // 4,
     "north": intersection_center[1] + road_width // 4,
     "east": intersection_center[0] - road_width // 4,
     "south": intersection_center[1] - road_width // 4
+}
+
+vehicle_turning_points_right = {
+    "west": intersection_center[0] - road_width // 4,
+    "north": intersection_center[1] - road_width // 4,
+    "east": intersection_center[0] + road_width // 4,
+    "south": intersection_center[1] + road_width // 4
 }
 
 
@@ -242,25 +250,33 @@ class Vehicle:
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color):
         self.direction = random.choice(vehicle_incoming_direction)
         self.x, self.y = vehicle_spawn_coords[self.direction]
-        self.out_going_direction = random.choice(["straight", "left"])
+        self.out_going_direction = random.choice(["straight", "left", "right"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points_left, vehicle_turning_points_right):
         threshold = thresholds[self.direction]
         print(f"Threshold value: {threshold}")
         print(f"Outgoing direction: {self.out_going_direction}")
-        current_turning_point = vehicle_turning_points[self.direction]
+        if self.out_going_direction == "left":
+            current_turning_point = vehicle_turning_points_left[self.direction]
+        else:
+            current_turning_point = vehicle_turning_points_right[self.direction]
 
         # For vehicle coming from the west
         if self.direction == "west":
             if current_traffic_light == "west" and current_light_state == 'GREEN':
                 if self.out_going_direction == "straight":
                     self.x += self.speed
-                else:
+                elif self.out_going_direction == "left":
                     if self.x < current_turning_point:
                         self.x += self.speed
                     else:
                         self.y -= self.speed
+                else:
+                    if self.x < current_turning_point:
+                        self.x += self.speed
+                    else:
+                        self.y += self.speed
             else:
                 if self.x < threshold:
                     self.x += self.speed
@@ -270,11 +286,17 @@ class Vehicle:
             if current_traffic_light == "east" and current_light_state == 'GREEN':
                 if self.out_going_direction == "straight":
                     self.x -= self.speed
-                else:
+                elif self.out_going_direction == "left":
                     if self.x > current_turning_point:
                         self.x -= self.speed
                     else:
                         self.y += self.speed
+
+                else:
+                    if self.x > current_turning_point:
+                        self.x -= self.speed
+                    else:
+                        self.y -= self.speed
             else:
                 if self.x > threshold:
                     self.x -= self.speed
@@ -284,11 +306,16 @@ class Vehicle:
             if current_traffic_light == "north" and current_light_state == 'GREEN':
                 if self.out_going_direction == "straight":
                     self.y += self.speed
-                else:
+                elif self.out_going_direction == "left":
                     if self.y < current_turning_point:
                         self.y += self.speed
                     else:
                         self.x += self.speed
+                else:
+                    if self.y < current_turning_point:
+                        self.y += self.speed
+                    else:
+                        self.x -= self.speed
             else:
                 if self.y < threshold:
                     self.y += self.speed
@@ -298,11 +325,16 @@ class Vehicle:
             if current_traffic_light == "south" and current_light_state == 'GREEN':
                 if self.out_going_direction == "straight":
                     self.y -= self.speed
-                else:
+                elif self.out_going_direction == "left":
                     if self.y > current_turning_point:
                         self.y -= self.speed
                     else:
                         self.x -= self.speed
+                else:
+                    if self.y > current_turning_point:
+                        self.y -= self.speed
+                    else:
+                        self.x += self.speed
             else:
                 if self.y > threshold:
                     self.y -= self.speed
@@ -338,13 +370,13 @@ def main():
         current_traffic_light, current_light_state = traffic_lights.update(current_time)
 
         # Move and draw the vehicle
-        vehicle.move(current_traffic_light, current_light_state, thresholds, vehicle_turning_points)
+        vehicle.move(current_traffic_light, current_light_state, thresholds, vehicle_turning_points_left, vehicle_turning_points_right)
         intersection.draw()
         traffic_lights.draw()
         crossing.draw()
         vehicle.draw()
 
-        # pygame.draw.circle(screen, RED, [500, vehicle_turning_points["north"]], 10, 10)
+        # pygame.draw.circle(screen, RED, [500, vehicle_turning_points_left["north"]], 10, 10)
 
         pygame.display.flip()
 
