@@ -382,9 +382,9 @@ class SARSA:
         }
 
         # vehicle parameters
-        self.vehicle_radius = 15
-        self.vehicle_width = 15
-        self.vehicle_gap = 15
+        self.vehicle_radius = 12
+        self.vehicle_width = 12
+        self.vehicle_gap = 12
         # vehicle speed
         self.vehicle_speed = 0.25
         # direction of a vehicle after the traffic light turns green
