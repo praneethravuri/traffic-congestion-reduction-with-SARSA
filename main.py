@@ -15,44 +15,35 @@ class Intersection:
         self.height = height
         self.font = font
 
+    def draw_road(self, position, size):
+        pygame.draw.rect(self.screen, self.intersection_colors["BLACK"], (position, size))
+
+    def draw_lane(self, start_pos, end_pos):
+        pygame.draw.line(self.screen, self.intersection_colors["YELLOW"], start_pos, end_pos, 2)
+
+    def draw_text(self, text, position):
+        rendered_text = self.font.render(text, True, self.intersection_colors["WHITE"])
+        self.screen.blit(rendered_text, position)
+
     def draw(self):
-        # Fill background with green
         self.screen.fill(self.intersection_colors["GREEN"])
 
-        # Drawing the vertical road
-        pygame.draw.rect(self.screen, self.intersection_colors["BLACK"],
-                         (self.center[0] - self.road_width // 2, 0, self.road_width, self.height))
+        # Vertical and horizontal roads
+        self.draw_road((self.center[0] - self.road_width // 2, 0), (self.road_width, self.height))
+        self.draw_road((0, self.center[1] - self.road_width // 2), (self.width, self.road_width))
 
-        # Drawing the horizontal road
-        pygame.draw.rect(self.screen, self.intersection_colors["BLACK"],
-                         (0, self.center[1] - self.road_width // 2, self.width, self.road_width))
+        # Lanes and labels
+        self.draw_lane((0, self.center[1]), (self.center[0] - self.road_width // 2, self.center[1]))
+        self.draw_text('West', (self.center[0] // 2, self.center[1] - 10))
 
-        # Drawing lanes for each road and naming them
-        # West lane
-        pygame.draw.line(self.screen, self.intersection_colors["YELLOW"], (0, self.center[1]),
-                         (self.center[0] - self.road_width // 2, self.center[1]), 2)
-        text = self.font.render('West', True, self.intersection_colors["WHITE"])
-        self.screen.blit(text, (self.center[0] // 2, self.center[1] - 10))
+        self.draw_lane((self.center[0] + self.road_width // 2, self.center[1]), (self.width, self.center[1]))
+        self.draw_text('East', (self.center[0] // 2 + self.center[0], self.center[1] - 10))
 
-        # East lane
-        pygame.draw.line(self.screen, self.intersection_colors["YELLOW"],
-                         (self.center[0] + self.road_width // 2, self.center[1]),
-                         (self.width, self.center[1]), 2)
-        text = self.font.render('East', True, self.intersection_colors["WHITE"])
-        self.screen.blit(text, (self.center[0] // 2 + self.center[0], self.center[1] - 10))
+        self.draw_lane((self.center[0], 0), (self.center[0], self.center[1] - self.road_width // 2))
+        self.draw_text('North', (self.center[0] - 30, self.center[1] // 2))
 
-        # North lane
-        pygame.draw.line(self.screen, self.intersection_colors["YELLOW"], (self.center[0], 0),
-                         (self.center[0], self.center[1] - self.road_width // 2), 2)
-        text = self.font.render('North', True, self.intersection_colors["WHITE"])
-        self.screen.blit(text, (self.center[0] - 30, self.center[1] // 2))
-
-        # South lane
-        pygame.draw.line(self.screen, self.intersection_colors["YELLOW"],
-                         (self.center[0], self.center[1] + self.road_width // 2),
-                         (self.center[0], self.height), 2)
-        text = self.font.render('South', True, self.intersection_colors["WHITE"])
-        self.screen.blit(text, (self.center[0] - 30, self.center[1] // 2 + self.center[1]))
+        self.draw_lane((self.center[0], self.center[1] + self.road_width // 2), (self.center[0], self.height))
+        self.draw_text('South', (self.center[0] - 30, self.center[1] // 2 + self.center[1]))
 
 
 class Crossing:
@@ -64,30 +55,25 @@ class Crossing:
         self.road_width = road_width
         self.intersection_trl_width = intersection_trl_width
 
+    def draw_crossing(self, position, size):
+        pygame.draw.rect(self.screen, self.intersection_colors["GRAY"], (position, size))
+
     def draw(self):
-        # Crossing parameters for the west lane
+        # Crossing parameters for west and east lanes
         west_crossing_x = self.intersection_center[0] - self.road_width // 2 - 25 - 5
-        west_crossing_y = self.intersection_center[1] - self.road_width // 2
-        pygame.draw.rect(self.screen, self.intersection_colors["GRAY"],
-                         (west_crossing_x, west_crossing_y, self.intersection_trl_width, self.road_width))
-
-        # Crossing for the east lane
         east_crossing_x = self.intersection_center[0] + self.road_width // 2
-        east_crossing_y = west_crossing_y
-        pygame.draw.rect(self.screen, self.intersection_colors["GRAY"],
-                         (east_crossing_x, east_crossing_y, self.intersection_trl_width, self.road_width))
+        crossing_y = self.intersection_center[1] - self.road_width // 2
 
-        # Crossing for the north lane
-        north_crossing_x = self.intersection_center[0] - self.road_width // 2
+        # Crossing parameters for north and south lanes
+        crossing_x = self.intersection_center[0] - self.road_width // 2
         north_crossing_y = self.intersection_center[1] - self.road_width // 2 - 25
-        pygame.draw.rect(self.screen, self.intersection_colors["GRAY"],
-                         (north_crossing_x, north_crossing_y, self.road_width, 25))
-
-        # Crossing for the south lane
-        south_crossing_x = north_crossing_x
         south_crossing_y = self.intersection_center[1] + self.road_width // 2
-        pygame.draw.rect(self.screen, self.intersection_colors["GRAY"],
-                         (south_crossing_x, south_crossing_y, self.road_width, 25))
+
+        # Draw crossings for each lane
+        self.draw_crossing((west_crossing_x, crossing_y), (self.intersection_trl_width, self.road_width))
+        self.draw_crossing((east_crossing_x, crossing_y), (self.intersection_trl_width, self.road_width))
+        self.draw_crossing((crossing_x, north_crossing_y), (self.road_width, 25))
+        self.draw_crossing((crossing_x, south_crossing_y), (self.road_width, 25))
 
 
 class TrafficLights:
@@ -106,57 +92,40 @@ class TrafficLights:
         self.traffic_light_change_times = traffic_light_change_times
         self.last_change_time = pygame.time.get_ticks()
 
+    def draw_traffic_light(self, direction, color):
+        if direction == "north":
+            width = self.traffic_light_width * 2 - self.road_width // 2
+            position = (self.intersection_center[0] - width // 2 - self.road_width // 4,
+                        self.intersection_center[1] - self.road_width // 2 - self.intersection_trl_width - 5)
+            size = (width, 10)
+        elif direction == "south":
+            width = self.traffic_light_width * 2 - self.road_width // 2
+            position = (self.intersection_center[0] - width // 2 + self.road_width // 4,
+                        self.intersection_center[1] + self.road_width // 2 - 5 + self.intersection_trl_width)
+            size = (width, 10)
+        elif direction == "east":
+            height = self.traffic_light_width * 2 - self.road_width // 2
+            position = (self.intersection_center[0] + self.road_width // 2 + self.intersection_trl_width,
+                        self.intersection_center[1] - height // 2 - self.road_width // 4)
+            size = (10, height)
+        elif direction == "west":
+            height = self.traffic_light_width * 2 - self.road_width // 2
+            position = (self.intersection_center[0] - self.road_width // 2 - self.intersection_trl_width - 10,
+                        self.intersection_center[1] - height // 2 + self.road_width // 4)
+            size = (10, height)
+
+        pygame.draw.rect(self.screen, color, (*position, *size))
+
     def draw(self):
-        # Initialize all traffic lights to red
-        north_color = self.trl_colors["RED_TR"]
-        south_color = self.trl_colors["RED_TR"]
-        east_color = self.trl_colors["RED_TR"]
-        west_color = self.trl_colors["RED_TR"]
-
-        light_color = None
-
-        # Determine the color based on current state
-        if self.current_light_state == "GREEN":
-            light_color = self.trl_colors["GREEN_TR"]
-        elif self.current_light_state == "YELLOW":
-            light_color = self.trl_colors["YELLOW_TR"]
-        elif self.current_light_state == "RED":
-            light_color = self.trl_colors["RED_TR"]
+        light_color = self.trl_colors[self.current_light_state + "_TR"]
 
         # Set the color of the current traffic light
-        if self.current_traffic_light == "north":
-            north_color = light_color
-        elif self.current_traffic_light == "south":
-            south_color = light_color
-        elif self.current_traffic_light == "east":
-            east_color = light_color
-        elif self.current_traffic_light == "west":
-            west_color = light_color
+        colors = {dir: self.trl_colors["RED_TR"] for dir in ["north", "south", "east", "west"]}
+        colors[self.current_traffic_light] = light_color
 
-        # Drawing traffic lights with the updated colors
-        # North traffic light
-        north_traffic_light_width = self.traffic_light_width * 2 - self.road_width // 2
-        north_traffic_light_pos = (self.intersection_center[0] - north_traffic_light_width // 2 - self.road_width // 4,
-                                   self.intersection_center[1] - self.road_width // 2 - self.intersection_trl_width - 5)
-        pygame.draw.rect(self.screen, north_color, (*north_traffic_light_pos, north_traffic_light_width, 10))
-
-        # South traffic light
-        south_traffic_light_width = self.traffic_light_width * 2 - self.road_width // 2
-        south_traffic_light_pos = (self.intersection_center[0] - south_traffic_light_width // 2 + self.road_width // 4,
-                                   self.intersection_center[1] + self.road_width // 2 - 5 + self.intersection_trl_width)
-        pygame.draw.rect(self.screen, south_color, (*south_traffic_light_pos, south_traffic_light_width, 10))
-
-        # East traffic light
-        east_traffic_light_height = self.traffic_light_width * 2 - self.road_width // 2
-        east_traffic_light_pos = (self.intersection_center[0] + self.road_width // 2 + self.intersection_trl_width,
-                                  self.intersection_center[1] - east_traffic_light_height // 2 - self.road_width // 4)
-        pygame.draw.rect(self.screen, east_color, (*east_traffic_light_pos, 10, east_traffic_light_height))
-
-        # West traffic light
-        west_traffic_light_height = self.traffic_light_width * 2 - self.road_width // 2
-        west_traffic_light_pos = (self.intersection_center[0] - self.road_width // 2 - self.intersection_trl_width - 10,
-                                  self.intersection_center[1] - west_traffic_light_height // 2 + self.road_width // 4)
-        pygame.draw.rect(self.screen, west_color, (*west_traffic_light_pos, 10, west_traffic_light_height))
+        # Drawing traffic lights for all directions
+        for direction, color in colors.items():
+            self.draw_traffic_light(direction, color)
 
     def update(self, current_time):
         # Logic to change the state of the traffic lights
@@ -419,7 +388,7 @@ class SARSA:
         }
         self.vehicle_count = {"north": 0, "south": 0, "east": 0, "west": 0}
         self.vehicle_list = []
-        self.font = pygame.font.SysFont(name="Arial", size=24, bold=True)
+        self.font = pygame.font.SysFont(name=None, size=36)
         self.vehicle_list_lock = threading.Lock()
 
     def vehicle_generator(self, stop_event, vehicle_list_lock):
@@ -439,10 +408,7 @@ class SARSA:
         line_spacing = 25
         color = (0, 0, 0)
         for k, v in vehicle_count.items():
-            if v != 0:
-                content = f"{k.capitalize()} lane: {v} | Road rage factor: {round(1 / v, 2) }"
-            else:
-                content = f"{k.capitalize()} lane: {v} | Road rage factor: 0"
+            content = f"{k.capitalize()} lane: {v}"
             text = self.font.render(content, True, color)
             self.screen.blit(text, (x, y))
             y += line_spacing
