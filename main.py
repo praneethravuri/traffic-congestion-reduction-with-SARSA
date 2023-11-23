@@ -36,7 +36,8 @@ class Main:
             "RED": (255, 0, 0),
             "YELLOW": (255, 255, 0),
             "GRAY": (128, 128, 128),
-            "WHITE": (255, 255, 255)
+            "WHITE": (255, 255, 255),
+            "BROWN": (185, 148, 112)
         }
 
         # crossing thresholds
