@@ -135,27 +135,27 @@ class TrafficLights:
 
         # Drawing traffic lights with the updated colors
         # North traffic light
-        north_traffic_light_width = self.traffic_light_width * 2 - self.road_width//2
-        north_traffic_light_pos = (self.intersection_center[0] - north_traffic_light_width // 2 - self.road_width//4,
+        north_traffic_light_width = self.traffic_light_width * 2 - self.road_width // 2
+        north_traffic_light_pos = (self.intersection_center[0] - north_traffic_light_width // 2 - self.road_width // 4,
                                    self.intersection_center[1] - self.road_width // 2 - self.intersection_trl_width - 5)
         pygame.draw.rect(self.screen, north_color, (*north_traffic_light_pos, north_traffic_light_width, 10))
 
         # South traffic light
-        south_traffic_light_width = self.traffic_light_width * 2 - self.road_width//2
-        south_traffic_light_pos = (self.intersection_center[0] - south_traffic_light_width // 2 + self.road_width//4,
+        south_traffic_light_width = self.traffic_light_width * 2 - self.road_width // 2
+        south_traffic_light_pos = (self.intersection_center[0] - south_traffic_light_width // 2 + self.road_width // 4,
                                    self.intersection_center[1] + self.road_width // 2 - 5 + self.intersection_trl_width)
         pygame.draw.rect(self.screen, south_color, (*south_traffic_light_pos, south_traffic_light_width, 10))
 
         # East traffic light
-        east_traffic_light_height = self.traffic_light_width * 2 - self.road_width//2
+        east_traffic_light_height = self.traffic_light_width * 2 - self.road_width // 2
         east_traffic_light_pos = (self.intersection_center[0] + self.road_width // 2 + self.intersection_trl_width,
-                                  self.intersection_center[1] - east_traffic_light_height // 2 - self.road_width//4)
+                                  self.intersection_center[1] - east_traffic_light_height // 2 - self.road_width // 4)
         pygame.draw.rect(self.screen, east_color, (*east_traffic_light_pos, 10, east_traffic_light_height))
 
         # West traffic light
-        west_traffic_light_height = self.traffic_light_width * 2 - self.road_width//2
+        west_traffic_light_height = self.traffic_light_width * 2 - self.road_width // 2
         west_traffic_light_pos = (self.intersection_center[0] - self.road_width // 2 - self.intersection_trl_width - 10,
-                                  self.intersection_center[1] - west_traffic_light_height // 2 + self.road_width//4)
+                                  self.intersection_center[1] - west_traffic_light_height // 2 + self.road_width // 4)
         pygame.draw.rect(self.screen, west_color, (*west_traffic_light_pos, 10, west_traffic_light_height))
 
     def update(self, current_time):
@@ -431,12 +431,18 @@ class SARSA:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
 
-    def display_vehicle_count(self, vehicle_count):
-        x, y = 50, 50
+    def display_count_road_rage(self, vehicle_count):
+        # if road rage factor is 0, there are no cars
+        # if road rage factor is > 0 and its value is very low, there are many cars in the lane
+        # if the road rage factor is > 0 and its value is very high, there are not many cars in the lane
+        x, y = 20, 20
         line_spacing = 25
         color = (0, 0, 0)
         for k, v in vehicle_count.items():
-            content = f"{k.capitalize()} lane: {v}"
+            if v != 0:
+                content = f"{k.capitalize()} lane: {v} | Road rage factor: {round(1 / v, 2) }"
+            else:
+                content = f"{k.capitalize()} lane: {v} | Road rage factor: 0"
             text = self.font.render(content, True, color)
             self.screen.blit(text, (x, y))
             y += line_spacing
@@ -500,7 +506,7 @@ class SARSA:
                             self.vehicle_count[crossed_direction] -= 1
 
                 print(self.vehicle_count)
-                self.display_vehicle_count(self.vehicle_count)
+                self.display_count_road_rage(self.vehicle_count)
                 pygame.display.flip()
         except Exception as e:
             print(f"Error during main loop: {e}")
