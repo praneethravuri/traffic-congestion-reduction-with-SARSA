@@ -195,19 +195,19 @@ class Vehicle:
         self.moving = True
         self.out_going_direction = None
         self.lane = None
+        self.threshold = None
 
-    def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color):
+    def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
+                         vehicle_count):
         self.direction = random.choice(vehicle_incoming_direction)
+        vehicle_count[self.direction] += 1
         self.lane = self.direction
         self.x, self.y = vehicle_spawn_coords[self.direction]
         self.out_going_direction = random.choice(["straight", "left", "right"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, lane_counts):
-        threshold = thresholds[self.direction]
-        print(f"Number of vehicles in each lane: {lane_counts}")
-        # print(f"Threshold value: {threshold}")
-        # print(f"Outgoing direction: {self.out_going_direction}")
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, vehicle_count):
+        self.threshold = thresholds[self.direction]
         if self.out_going_direction == "left":
             current_turning_point = vehicle_turning_points["left"][self.direction]
         else:
@@ -216,7 +216,7 @@ class Vehicle:
         # For vehicle coming from the west
         if self.direction == "west":
             if (current_traffic_light == "west" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.x > threshold):
+                    current_light_state in ["YELLOW", "RED"] and self.x > self.threshold):
                 if self.out_going_direction == "straight":
                     self.x += self.speed
                 elif self.out_going_direction == "left":
@@ -229,15 +229,14 @@ class Vehicle:
                         self.x += self.speed
                     else:
                         self.y += self.speed
-                lane_counts[self.direction] -= 1
             else:
-                if self.x < threshold:
+                if self.x < self.threshold:
                     self.x += self.speed
 
         # For vehicle coming from the east
         elif self.direction == "east":
             if (current_traffic_light == "east" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.x < threshold):
+                    current_light_state in ["YELLOW", "RED"] and self.x < self.threshold):
                 if self.out_going_direction == "straight":
                     self.x -= self.speed
                 elif self.out_going_direction == "left":
@@ -251,15 +250,14 @@ class Vehicle:
                         self.x -= self.speed
                     else:
                         self.y -= self.speed
-                lane_counts[self.direction] -= 1
             else:
-                if self.x > threshold:
+                if self.x > self.threshold:
                     self.x -= self.speed
 
         # For vehicle coming from the north
         elif self.direction == "north":
             if (current_traffic_light == "north" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.y > threshold):
+                    current_light_state in ["YELLOW", "RED"] and self.y > self.threshold):
                 if self.out_going_direction == "straight":
                     self.y += self.speed
                 elif self.out_going_direction == "left":
@@ -272,16 +270,14 @@ class Vehicle:
                         self.y += self.speed
                     else:
                         self.x -= self.speed
-
-                lane_counts[self.direction] -= 1
             else:
-                if self.y < threshold:
+                if self.y < self.threshold:
                     self.y += self.speed
 
         # For vehicle coming from the south
         elif self.direction == "south":
             if (current_traffic_light == "south" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.y < threshold):
+                    current_light_state in ["YELLOW", "RED"] and self.y < self.threshold):
                 if self.out_going_direction == "straight":
                     self.y -= self.speed
                 elif self.out_going_direction == "left":
@@ -294,10 +290,8 @@ class Vehicle:
                         self.y -= self.speed
                     else:
                         self.x += self.speed
-
-                lane_counts[self.direction] -= 1
             else:
-                if self.y > threshold:
+                if self.y > self.threshold:
                     self.y -= self.speed
 
         return self.x, self.y
@@ -308,7 +302,7 @@ class Vehicle:
     def kill_vehicle(self, width, height):
         # Check if the vehicle is out of bounds
         out_of_bounds = self.x < 0 or self.x > width or self.y < 0 or self.y > height
-        return out_of_bounds
+        return out_of_bounds, self.direction
 
 
 class SARSA:
@@ -402,24 +396,16 @@ class SARSA:
                 "south": self.intersection_center[1] + self.road_width // 4
             }
         }
-
+        self.vehicle_count = {"north": 0, "south": 0, "east": 0, "west": 0}
         self.vehicle_list = []
         self.font = pygame.font.SysFont(name=None, size=36)
         self.vehicle_list_lock = threading.Lock()
-        self.lane_counts = None
-
-    def count_vehicles(self):
-        self.lane_counts = {'north': 0, 'south': 0, 'east': 0, 'west': 0}
-        with self.vehicle_list_lock:
-            for vehicle in self.vehicle_list:
-                self.lane_counts[vehicle.lane] += 1
-        return self.lane_counts
 
     def vehicle_generator(self, screen, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
             vehicle = Vehicle(self.screen, self.vehicle_radius, self.vehicle_width, self.vehicle_speed)
             vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_incoming_direction,
-                                     self.vehicle_direction_color)
+                                     self.vehicle_direction_color, self.vehicle_count)
             with vehicle_list_lock:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
@@ -469,18 +455,19 @@ class SARSA:
                 traffic_lights.draw()
                 crossing.draw()
 
-                self.lane_counts = self.count_vehicles()
-                # print(f"Vehicles in each lane: {lane_counts}")
-
                 # Process and draw vehicles
                 with vehicle_list_lock:
                     for vehicle in self.vehicle_list:  # Note the use of self here
                         vehicle.move(current_traffic_light, current_light_state, self.thresholds,
-                                     self.vehicle_turning_points, self.lane_counts)
+                                     self.vehicle_turning_points, self.vehicle_count)
                         vehicle.draw()
-                        if vehicle.kill_vehicle(self.width, self.height):
+                        # if vehicle.kill_vehicle(self.width, self.height):
+                        #     self.vehicle_list.remove(vehicle)
+                        return_value, direction = vehicle.kill_vehicle(self.width, self.height)
+                        if return_value:
                             self.vehicle_list.remove(vehicle)
-
+                            self.vehicle_count[direction] -= 1
+                print(self.vehicle_count)
                 pygame.display.flip()
         except Exception as e:
             print(f"Error during main loop: {e}")
