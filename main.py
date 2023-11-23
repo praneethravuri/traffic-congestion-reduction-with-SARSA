@@ -81,7 +81,8 @@ class TrafficLights:
                  traffic_light_width, intersection_center, road_width, intersection_trl_width,
                  traffic_light_change_times):
         self.screen = screen
-        self.current_traffic_light_index = traffic_lights_directions.index(current_traffic_light)
+        self.current_traffic_light = current_traffic_light
+        self.current_traffic_light_index = traffic_lights_directions.index(self.current_traffic_light)
         self.current_light_state = current_light_state
         self.traffic_lights_directions = traffic_lights_directions
         self.trl_colors = trl_colors
@@ -128,26 +129,23 @@ class TrafficLights:
             self.draw_traffic_light(direction, color)
 
     def update(self, current_time):
-        # Logic to change the state of the traffic lights
-        if self.current_light_state == "GREEN" and current_time - self.last_change_time >= \
-                self.traffic_light_change_times[
-                    "GREEN"] * 1000:
-            self.current_light_state = "YELLOW"
-            self.last_change_time = current_time
-        elif self.current_light_state == "YELLOW" and current_time - self.last_change_time >= \
-                self.traffic_light_change_times["YELLOW"] * 1000:
-            self.current_light_state = "RED"
-            self.last_change_time = current_time
-            self.current_traffic_light_index = (self.current_traffic_light_index + 1) % len(
-                self.traffic_lights_directions)
-        elif self.current_light_state == "RED" and current_time - self.last_change_time >= \
-                self.traffic_light_change_times[
-                    "RED"] * 1000:
-            self.current_light_state = "GREEN"
+        time_diff = current_time - self.last_change_time
+        time_limit = self.traffic_light_change_times[self.current_light_state] * 1000
+
+        if time_diff >= time_limit:
+            if self.current_light_state == "GREEN":
+                self.current_light_state = "YELLOW"
+            elif self.current_light_state == "YELLOW":
+                self.current_light_state = "RED"
+                # Move to next traffic light
+                self.current_traffic_light_index = (self.current_traffic_light_index + 1) % len(
+                    self.traffic_lights_directions)
+            elif self.current_light_state == "RED":
+                self.current_light_state = "GREEN"
+
             self.last_change_time = current_time
 
         self.current_traffic_light = self.traffic_lights_directions[self.current_traffic_light_index]
-
         return self.current_traffic_light, self.current_light_state
 
 
@@ -401,9 +399,6 @@ class SARSA:
             time.sleep(0.5)
 
     def display_count_road_rage(self, vehicle_count):
-        # if road rage factor is 0, there are no cars
-        # if road rage factor is > 0 and its value is very low, there are many cars in the lane
-        # if the road rage factor is > 0 and its value is very high, there are not many cars in the lane
         x, y = 20, 20
         line_spacing = 25
         color = (0, 0, 0)
@@ -448,7 +443,6 @@ class SARSA:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
-                        sys.exit()
 
                 current_time = pygame.time.get_ticks()
                 current_traffic_light, current_light_state = traffic_lights.update(current_time)
@@ -471,7 +465,7 @@ class SARSA:
                         if has_crossed:
                             self.vehicle_count[crossed_direction] -= 1
 
-                print(self.vehicle_count)
+                # print(self.vehicle_count)
                 self.display_count_road_rage(self.vehicle_count)
                 pygame.display.flip()
         except Exception as e:
