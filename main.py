@@ -114,7 +114,7 @@ class Main:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
 
-    def display_count_road_rage(self, vehicle_count):
+    def display_vehicle_count(self, vehicle_count):
         x, y = 20, 20
         line_spacing = 25
         color = (0, 0, 0)
@@ -182,7 +182,7 @@ class Main:
                             self.vehicle_count[crossed_direction] -= 1
 
                 # print(self.vehicle_count)
-                self.display_count_road_rage(self.vehicle_count)
+                self.display_vehicle_count(self.vehicle_count)
                 pygame.display.flip()
         except Exception as e:
             print(f"Error during main loop: {e}")
