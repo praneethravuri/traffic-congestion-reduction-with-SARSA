@@ -196,6 +196,7 @@ class Vehicle:
         self.out_going_direction = None
         self.lane = None
         self.threshold = None
+        self.has_crossed_threshold = False
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -302,7 +303,27 @@ class Vehicle:
     def kill_vehicle(self, width, height):
         # Check if the vehicle is out of bounds
         out_of_bounds = self.x < 0 or self.x > width or self.y < 0 or self.y > height
-        return out_of_bounds, self.direction
+        return out_of_bounds
+
+    def crossed_threshold(self):
+        if not self.has_crossed_threshold:
+            if self.direction == "west" and self.x > self.threshold:
+                self.has_crossed_threshold = True
+                return True, self.direction
+
+            elif self.direction == "east" and self.x < self.threshold:
+                self.has_crossed_threshold = True
+                return True, self.direction
+
+            elif self.direction == "north" and self.y > self.threshold:
+                self.has_crossed_threshold = True
+                return True, self.direction
+
+            elif self.direction == "south" and self.y < self.threshold:
+                self.has_crossed_threshold = True
+                return True, self.direction
+
+        return False, None
 
 
 class SARSA:
@@ -401,7 +422,7 @@ class SARSA:
         self.font = pygame.font.SysFont(name=None, size=36)
         self.vehicle_list_lock = threading.Lock()
 
-    def vehicle_generator(self, screen, stop_event, vehicle_list_lock):
+    def vehicle_generator(self, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
             vehicle = Vehicle(self.screen, self.vehicle_radius, self.vehicle_width, self.vehicle_speed)
             vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_incoming_direction,
@@ -409,6 +430,16 @@ class SARSA:
             with vehicle_list_lock:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
+
+    def display_vehicle_count(self, vehicle_count):
+        x, y = 50, 50
+        line_spacing = 25
+        color = (0, 0, 0)
+        for k, v in vehicle_count.items():
+            content = f"{k.capitalize()} lane: {v}"
+            text = self.font.render(content, True, color)
+            self.screen.blit(text, (x, y))
+            y += line_spacing
 
     def run(self):
 
@@ -432,7 +463,7 @@ class SARSA:
 
         # Start the vehicle generator thread
         vehicle_gen_thread = threading.Thread(target=self.vehicle_generator,
-                                              args=(screen, stop_event, vehicle_list_lock))
+                                              args=(stop_event, vehicle_list_lock))
         try:
             vehicle_gen_thread.start()
         except RuntimeError as e:
@@ -461,13 +492,15 @@ class SARSA:
                         vehicle.move(current_traffic_light, current_light_state, self.thresholds,
                                      self.vehicle_turning_points, self.vehicle_count)
                         vehicle.draw()
-                        # if vehicle.kill_vehicle(self.width, self.height):
-                        #     self.vehicle_list.remove(vehicle)
-                        return_value, direction = vehicle.kill_vehicle(self.width, self.height)
-                        if return_value:
+                        if vehicle.kill_vehicle(self.width, self.height):
                             self.vehicle_list.remove(vehicle)
-                            self.vehicle_count[direction] -= 1
+
+                        has_crossed, crossed_direction = vehicle.crossed_threshold()
+                        if has_crossed:
+                            self.vehicle_count[crossed_direction] -= 1
+
                 print(self.vehicle_count)
+                self.display_vehicle_count(self.vehicle_count)
                 pygame.display.flip()
         except Exception as e:
             print(f"Error during main loop: {e}")
