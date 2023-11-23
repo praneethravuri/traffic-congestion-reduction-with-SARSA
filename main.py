@@ -135,28 +135,28 @@ class TrafficLights:
 
         # Drawing traffic lights with the updated colors
         # North traffic light
-        north_traffic_light_width = self.traffic_light_width * 2
-        north_traffic_light_pos = (self.intersection_center[0] - north_traffic_light_width // 2,
-                                   self.intersection_center[1] - self.road_width // 2 - self.intersection_trl_width)
-        pygame.draw.rect(self.screen, north_color, (*north_traffic_light_pos, north_traffic_light_width, 5))
+        north_traffic_light_width = self.traffic_light_width * 2 - self.road_width//2
+        north_traffic_light_pos = (self.intersection_center[0] - north_traffic_light_width // 2 - self.road_width//4,
+                                   self.intersection_center[1] - self.road_width // 2 - self.intersection_trl_width - 5)
+        pygame.draw.rect(self.screen, north_color, (*north_traffic_light_pos, north_traffic_light_width, 10))
 
         # South traffic light
-        south_traffic_light_width = self.traffic_light_width * 2
-        south_traffic_light_pos = (self.intersection_center[0] - south_traffic_light_width // 2,
+        south_traffic_light_width = self.traffic_light_width * 2 - self.road_width//2
+        south_traffic_light_pos = (self.intersection_center[0] - south_traffic_light_width // 2 + self.road_width//4,
                                    self.intersection_center[1] + self.road_width // 2 - 5 + self.intersection_trl_width)
-        pygame.draw.rect(self.screen, south_color, (*south_traffic_light_pos, south_traffic_light_width, 5))
+        pygame.draw.rect(self.screen, south_color, (*south_traffic_light_pos, south_traffic_light_width, 10))
 
         # East traffic light
-        east_traffic_light_height = self.traffic_light_width * 2
+        east_traffic_light_height = self.traffic_light_width * 2 - self.road_width//2
         east_traffic_light_pos = (self.intersection_center[0] + self.road_width // 2 + self.intersection_trl_width,
-                                  self.intersection_center[1] - east_traffic_light_height // 2)
-        pygame.draw.rect(self.screen, east_color, (*east_traffic_light_pos, 5, east_traffic_light_height))
+                                  self.intersection_center[1] - east_traffic_light_height // 2 - self.road_width//4)
+        pygame.draw.rect(self.screen, east_color, (*east_traffic_light_pos, 10, east_traffic_light_height))
 
         # West traffic light
-        west_traffic_light_height = self.traffic_light_width * 2
-        west_traffic_light_pos = (self.intersection_center[0] - self.road_width // 2 - self.intersection_trl_width - 5,
-                                  self.intersection_center[1] - west_traffic_light_height // 2)
-        pygame.draw.rect(self.screen, west_color, (*west_traffic_light_pos, 5, west_traffic_light_height))
+        west_traffic_light_height = self.traffic_light_width * 2 - self.road_width//2
+        west_traffic_light_pos = (self.intersection_center[0] - self.road_width // 2 - self.intersection_trl_width - 10,
+                                  self.intersection_center[1] - west_traffic_light_height // 2 + self.road_width//4)
+        pygame.draw.rect(self.screen, west_color, (*west_traffic_light_pos, 10, west_traffic_light_height))
 
     def update(self, current_time):
         # Logic to change the state of the traffic lights
@@ -207,7 +207,7 @@ class Vehicle:
         self.out_going_direction = random.choice(["straight", "left", "right"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, vehicle_count):
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
         self.threshold = thresholds[self.direction]
         if self.out_going_direction == "left":
             current_turning_point = vehicle_turning_points["left"][self.direction]
@@ -419,7 +419,7 @@ class SARSA:
         }
         self.vehicle_count = {"north": 0, "south": 0, "east": 0, "west": 0}
         self.vehicle_list = []
-        self.font = pygame.font.SysFont(name=None, size=36)
+        self.font = pygame.font.SysFont(name="Arial", size=24, bold=True)
         self.vehicle_list_lock = threading.Lock()
 
     def vehicle_generator(self, stop_event, vehicle_list_lock):
@@ -490,7 +490,7 @@ class SARSA:
                 with vehicle_list_lock:
                     for vehicle in self.vehicle_list:  # Note the use of self here
                         vehicle.move(current_traffic_light, current_light_state, self.thresholds,
-                                     self.vehicle_turning_points, self.vehicle_count)
+                                     self.vehicle_turning_points)
                         vehicle.draw()
                         if vehicle.kill_vehicle(self.width, self.height):
                             self.vehicle_list.remove(vehicle)
