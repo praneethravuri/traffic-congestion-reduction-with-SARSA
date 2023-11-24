@@ -39,6 +39,44 @@ class Vehicle:
         elif axis == "y":
             self.y += self.speed if increment else -self.speed
 
+    def handle_turn(self, turn_direction, current_turning_point):
+        if turn_direction == "left":
+            if self.direction in ["west", "south"]:
+                if (self.direction == "west" and self.x < current_turning_point) or \
+                        (self.direction == "south" and self.y < current_turning_point):
+                    self.change_speed('x', True)
+                else:
+                    self.change_speed('y', False)
+            elif self.direction in ["east", "north"]:
+                if (self.direction == "east" and self.x > current_turning_point) or \
+                        (self.direction == "north" and self.y > current_turning_point):
+                    self.change_speed('x', False)
+                else:
+                    self.change_speed('y', True)
+        elif turn_direction == "right":
+            if self.direction in ["west", "south"]:
+                if (self.direction == "west" and self.x < current_turning_point) or \
+                        (self.direction == "south" and self.y < current_turning_point):
+                    self.change_speed('x', True)
+                else:
+                    self.change_speed('y', True)
+            elif self.direction in ["east", "north"]:
+                if (self.direction == "east" and self.x > current_turning_point) or \
+                        (self.direction == "north" and self.y > current_turning_point):
+                    self.change_speed('x', False)
+                else:
+                    self.change_speed('y', False)
+
+        else:
+            if self.direction == "west":
+                self.change_speed('x', True)
+            elif self.direction == "east":
+                self.change_speed('x', False)
+            elif self.direction == "north":
+                self.change_speed('y', True)
+            else:
+                self.change_speed('y', False)
+
     def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, current_time):
         # self.previous_x = self.x
         # self.previous_y = self.y
@@ -48,28 +86,16 @@ class Vehicle:
         self.threshold = thresholds[self.direction]
         if self.out_going_direction == "left":
             current_turning_point = vehicle_turning_points["left"][self.direction]
-        else:
+        elif self.out_going_direction == "right":
             current_turning_point = vehicle_turning_points["right"][self.direction]
+        else:
+            current_turning_point = None
 
         # For vehicle coming from the west
         if self.direction == "west":
             if (current_traffic_light == "west" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.x > self.threshold):
-                if self.out_going_direction == "straight":
-                    # self.x += self.speed
-                    self.change_speed('x', True)
-                elif self.out_going_direction == "left":
-                    if self.x < current_turning_point:
-                        # self.x += self.speed
-                        self.change_speed('x', True)
-                    else:
-                        # self.y -= self.speed
-                        self.change_speed('y', False)
-                else:
-                    if self.x < current_turning_point:
-                        self.change_speed('x', True)
-                    else:
-                        self.change_speed('y', True)
+                self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.x < self.threshold:
                     self.change_speed('x', True)
@@ -80,20 +106,7 @@ class Vehicle:
         elif self.direction == "east":
             if (current_traffic_light == "east" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.x < self.threshold):
-                if self.out_going_direction == "straight":
-                    # self.x -= self.speed
-                    self.change_speed('x', False)
-                elif self.out_going_direction == "left":
-                    if self.x > current_turning_point:
-                        self.change_speed('x', False)
-                    else:
-                        self.change_speed('y', True)
-
-                else:
-                    if self.x > current_turning_point:
-                        self.change_speed('x', False)
-                    else:
-                        self.change_speed('y', False)
+                self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.x > self.threshold:
                     self.change_speed('x', False)
@@ -104,18 +117,7 @@ class Vehicle:
         elif self.direction == "north":
             if (current_traffic_light == "north" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.y > self.threshold):
-                if self.out_going_direction == "straight":
-                    self.change_speed('y', True)
-                elif self.out_going_direction == "left":
-                    if self.y < current_turning_point:
-                        self.change_speed('y', True)
-                    else:
-                        self.change_speed('x', True)
-                else:
-                    if self.y < current_turning_point:
-                        self.change_speed('y', True)
-                    else:
-                        self.change_speed('x', False)
+                self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.y < self.threshold:
                     self.change_speed('y', True)
@@ -126,18 +128,7 @@ class Vehicle:
         elif self.direction == "south":
             if (current_traffic_light == "south" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.y < self.threshold):
-                if self.out_going_direction == "straight":
-                    self.change_speed('y', False)
-                elif self.out_going_direction == "left":
-                    if self.y > current_turning_point:
-                        self.change_speed('y', False)
-                    else:
-                        self.change_speed('x', False)
-                else:
-                    if self.y > current_turning_point:
-                        self.change_speed('y', False)
-                    else:
-                        self.change_speed('x', False)
+                self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
