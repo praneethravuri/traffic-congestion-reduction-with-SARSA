@@ -35,7 +35,7 @@ class Vehicle:
         # self.previous_y = self.y
         # too_close = any(self.is_too_close(other_vehicle) for other_vehicle in vehicle_list if
         #                 other_vehicle.direction == self.direction)
-        # adjusted_speed = self.speed * 0.5 if too_close else self.speed
+        # self.speed = self.speed * 0.5 if too_close else self.speed
         self.threshold = thresholds[self.direction]
         if self.out_going_direction == "left":
             current_turning_point = vehicle_turning_points["left"][self.direction]
