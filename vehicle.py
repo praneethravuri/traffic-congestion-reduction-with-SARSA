@@ -1,5 +1,6 @@
 import pygame
 import random
+import uuid
 
 
 class Vehicle:
@@ -17,9 +18,11 @@ class Vehicle:
         self.lane = None
         self.threshold = None
         self.has_crossed_threshold = False
-        self.previous_x = None
-        self.previous_y = None
+        # self.previous_x = None
+        # self.previous_y = None
         # self.vehicle_gap = 2*self.radius + self.radius//2
+        self.waiting_time = None
+        self.id = uuid.uuid4()
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -30,7 +33,7 @@ class Vehicle:
         self.out_going_direction = random.choice(["straight", "left", "right"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, vehicle_list):
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, current_time):
         # self.previous_x = self.x
         # self.previous_y = self.y
         # too_close = any(self.is_too_close(other_vehicle) for other_vehicle in vehicle_list if
@@ -61,6 +64,8 @@ class Vehicle:
             else:
                 if self.x < self.threshold:
                     self.x += self.speed
+                    if self.waiting_time is None:
+                        self.waiting_time = current_time
 
         # For vehicle coming from the east
         elif self.direction == "east":
@@ -82,6 +87,8 @@ class Vehicle:
             else:
                 if self.x > self.threshold:
                     self.x -= self.speed
+                    if self.waiting_time is None:
+                        self.waiting_time = current_time
 
         # For vehicle coming from the north
         elif self.direction == "north":
@@ -102,6 +109,8 @@ class Vehicle:
             else:
                 if self.y < self.threshold:
                     self.y += self.speed
+                    if self.waiting_time is None:
+                        self.waiting_time = current_time
 
         # For vehicle coming from the south
         elif self.direction == "south":
@@ -122,6 +131,8 @@ class Vehicle:
             else:
                 if self.y > self.threshold:
                     self.y -= self.speed
+                    if self.waiting_time is None:
+                        self.waiting_time = current_time
 
         # for other_vehicle in vehicle_list:
         #     if self.is_too_close(other_vehicle):
@@ -154,20 +165,22 @@ class Vehicle:
 
     def crossed_threshold(self):
         if not self.has_crossed_threshold:
+            crossed = False
             if self.direction == "west" and self.x > self.threshold:
-                self.has_crossed_threshold = True
-                return True, self.direction
-
+                crossed = True
             elif self.direction == "east" and self.x < self.threshold:
-                self.has_crossed_threshold = True
-                return True, self.direction
-
+                crossed = True
             elif self.direction == "north" and self.y > self.threshold:
-                self.has_crossed_threshold = True
-                return True, self.direction
-
+                crossed = True
             elif self.direction == "south" and self.y < self.threshold:
+                crossed = True
+
+            if crossed:
                 self.has_crossed_threshold = True
+                if self.waiting_time is not None:
+                    waiting_time = pygame.time.get_ticks() - self.waiting_time
+                    print(f"{self.id} from {self.direction} waited for {waiting_time} milliseconds")
                 return True, self.direction
 
         return False, None
+

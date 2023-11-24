@@ -173,7 +173,7 @@ class Main:
                 with vehicle_list_lock:
                     for vehicle in self.vehicle_list:  # Note the use of self here
                         vehicle.move(current_traffic_light, current_light_state, self.thresholds,
-                                     self.vehicle_turning_points, self.vehicle_list)
+                                     self.vehicle_turning_points, current_time)
                         vehicle.draw()
                         if vehicle.kill_vehicle(self.width, self.height):
                             self.vehicle_list.remove(vehicle)
