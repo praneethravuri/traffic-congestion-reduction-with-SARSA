@@ -11,8 +11,8 @@ class Intersection:
         self.height = height
         self.font = font
 
-    def draw_road(self, position, size):
-        pygame.draw.rect(self.screen, self.intersection_colors["BLACK"], (position, size))
+    def draw_road(self, position, size, color):
+        pygame.draw.rect(self.screen, color, (position, size))
 
     def draw_lane(self, start_pos, end_pos):
         pygame.draw.line(self.screen, self.intersection_colors["YELLOW"], start_pos, end_pos, 2)
@@ -24,9 +24,19 @@ class Intersection:
     def draw(self):
         self.screen.fill(self.intersection_colors["GREEN"])
 
+        # drawing pathways for horizontal and vertical roads
+        vertical_pathway_width = self.road_width * 1.5
+        horizontal_pathway_height = self.road_width * 1.5
+        self.draw_road((self.center[0] - vertical_pathway_width // 2, 0),
+                       (vertical_pathway_width, self.height), self.intersection_colors["BROWN"])
+        self.draw_road((0, self.center[1] - horizontal_pathway_height // 2),
+                       (self.width, horizontal_pathway_height), self.intersection_colors["BROWN"])
+
         # Vertical and horizontal roads
-        self.draw_road((self.center[0] - self.road_width // 2, 0), (self.road_width, self.height))
-        self.draw_road((0, self.center[1] - self.road_width // 2), (self.width, self.road_width))
+        self.draw_road((self.center[0] - self.road_width // 2, 0), (self.road_width, self.height),
+                       self.intersection_colors["BLACK"])
+        self.draw_road((0, self.center[1] - self.road_width // 2), (self.width, self.road_width),
+                       self.intersection_colors["BLACK"])
 
         # Lanes and labels
         self.draw_lane((0, self.center[1]), (self.center[0] - self.road_width // 2, self.center[1]))

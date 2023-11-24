@@ -19,7 +19,7 @@ class Vehicle:
         self.has_crossed_threshold = False
         self.previous_x = None
         self.previous_y = None
-        self.vehicle_gap = 2*self.radius + self.radius//2
+        # self.vehicle_gap = 2*self.radius + self.radius//2
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -31,11 +31,11 @@ class Vehicle:
         self.color = vehicle_direction_color[self.out_going_direction]
 
     def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, vehicle_list):
-        self.previous_x = self.x
-        self.previous_y = self.y
-        too_close = any(self.is_too_close(other_vehicle) for other_vehicle in vehicle_list if
-                        other_vehicle.direction == self.direction)
-        adjusted_speed = self.speed * 0.5 if too_close else self.speed
+        # self.previous_x = self.x
+        # self.previous_y = self.y
+        # too_close = any(self.is_too_close(other_vehicle) for other_vehicle in vehicle_list if
+        #                 other_vehicle.direction == self.direction)
+        # adjusted_speed = self.speed * 0.5 if too_close else self.speed
         self.threshold = thresholds[self.direction]
         if self.out_going_direction == "left":
             current_turning_point = vehicle_turning_points["left"][self.direction]
@@ -47,102 +47,102 @@ class Vehicle:
             if (current_traffic_light == "west" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.x > self.threshold):
                 if self.out_going_direction == "straight":
-                    self.x += adjusted_speed
+                    self.x += self.speed
                 elif self.out_going_direction == "left":
                     if self.x < current_turning_point:
-                        self.x += adjusted_speed
+                        self.x += self.speed
                     else:
-                        self.y -= adjusted_speed
+                        self.y -= self.speed
                 else:
                     if self.x < current_turning_point:
-                        self.x += adjusted_speed
+                        self.x += self.speed
                     else:
-                        self.y += adjusted_speed
+                        self.y += self.speed
             else:
                 if self.x < self.threshold:
-                    self.x += adjusted_speed
+                    self.x += self.speed
 
         # For vehicle coming from the east
         elif self.direction == "east":
             if (current_traffic_light == "east" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.x < self.threshold):
                 if self.out_going_direction == "straight":
-                    self.x -= adjusted_speed
+                    self.x -= self.speed
                 elif self.out_going_direction == "left":
                     if self.x > current_turning_point:
-                        self.x -= adjusted_speed
+                        self.x -= self.speed
                     else:
-                        self.y += adjusted_speed
+                        self.y += self.speed
 
                 else:
                     if self.x > current_turning_point:
-                        self.x -= adjusted_speed
+                        self.x -= self.speed
                     else:
-                        self.y -= adjusted_speed
+                        self.y -= self.speed
             else:
                 if self.x > self.threshold:
-                    self.x -= adjusted_speed
+                    self.x -= self.speed
 
         # For vehicle coming from the north
         elif self.direction == "north":
             if (current_traffic_light == "north" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.y > self.threshold):
                 if self.out_going_direction == "straight":
-                    self.y += adjusted_speed
+                    self.y += self.speed
                 elif self.out_going_direction == "left":
                     if self.y < current_turning_point:
-                        self.y += adjusted_speed
+                        self.y += self.speed
                     else:
-                        self.x += adjusted_speed
+                        self.x += self.speed
                 else:
                     if self.y < current_turning_point:
-                        self.y += adjusted_speed
+                        self.y += self.speed
                     else:
-                        self.x -= adjusted_speed
+                        self.x -= self.speed
             else:
                 if self.y < self.threshold:
-                    self.y += adjusted_speed
+                    self.y += self.speed
 
         # For vehicle coming from the south
         elif self.direction == "south":
             if (current_traffic_light == "south" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.y < self.threshold):
                 if self.out_going_direction == "straight":
-                    self.y -= adjusted_speed
+                    self.y -= self.speed
                 elif self.out_going_direction == "left":
                     if self.y > current_turning_point:
-                        self.y -= adjusted_speed
+                        self.y -= self.speed
                     else:
-                        self.x -= adjusted_speed
+                        self.x -= self.speed
                 else:
                     if self.y > current_turning_point:
-                        self.y -= adjusted_speed
+                        self.y -= self.speed
                     else:
-                        self.x += adjusted_speed
+                        self.x += self.speed
             else:
                 if self.y > self.threshold:
-                    self.y -= adjusted_speed
+                    self.y -= self.speed
 
-        for other_vehicle in vehicle_list:
-            if self.is_too_close(other_vehicle):
-                self.x = self.previous_x
-                self.y = self.previous_y
-                break
+        # for other_vehicle in vehicle_list:
+        #     if self.is_too_close(other_vehicle):
+        #         self.x = self.previous_x
+        #         self.y = self.previous_y
+        #         break
 
         return self.x, self.y
 
-    def is_too_close(self, other_vehicle):
-        """
-        Check if the current vehicle is too close to another vehicle.
-        """
-        if other_vehicle is self:
-            return False  # Skip self
-
-        if self.direction != other_vehicle.direction:
-            return False  # Check only vehicles in the same lane
-
-        distance = ((self.x - other_vehicle.x) ** 2 + (self.y - other_vehicle.y) ** 2) ** 0.5
-        return distance < self.vehicle_gap
+    # def is_too_close(self, other_vehicle):
+    #     """
+    #     Check if the current vehicle is too close to another vehicle.
+    #     """
+    #     if other_vehicle is self:
+    #         return False  # Skip self
+    #
+    #     if self.direction != other_vehicle.direction:
+    #         return False  # Check only vehicles in the same lane
+    #
+    #     distance = ((self.x - other_vehicle.x) ** 2 + (self.y - other_vehicle.y) ** 2) ** 0.5
+    #     return distance < self.vehicle_gap
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, [self.x, self.y], self.radius, self.width)
