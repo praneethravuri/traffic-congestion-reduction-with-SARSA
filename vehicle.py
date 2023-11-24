@@ -33,6 +33,12 @@ class Vehicle:
         self.out_going_direction = random.choice(["straight", "left", "right"])
         self.color = vehicle_direction_color[self.out_going_direction]
 
+    def change_speed(self, axis, increment):
+        if axis == "x":
+            self.x += self.speed if increment else -self.speed
+        elif axis == "y":
+            self.y += self.speed if increment else -self.speed
+
     def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, current_time):
         # self.previous_x = self.x
         # self.previous_y = self.y
@@ -50,20 +56,23 @@ class Vehicle:
             if (current_traffic_light == "west" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.x > self.threshold):
                 if self.out_going_direction == "straight":
-                    self.x += self.speed
+                    # self.x += self.speed
+                    self.change_speed('x', True)
                 elif self.out_going_direction == "left":
                     if self.x < current_turning_point:
-                        self.x += self.speed
+                        # self.x += self.speed
+                        self.change_speed('x', True)
                     else:
-                        self.y -= self.speed
+                        # self.y -= self.speed
+                        self.change_speed('y', False)
                 else:
                     if self.x < current_turning_point:
-                        self.x += self.speed
+                        self.change_speed('x', True)
                     else:
-                        self.y += self.speed
+                        self.change_speed('y', True)
             else:
                 if self.x < self.threshold:
-                    self.x += self.speed
+                    self.change_speed('x', True)
                     if self.waiting_time is None:
                         self.waiting_time = current_time
 
@@ -72,21 +81,22 @@ class Vehicle:
             if (current_traffic_light == "east" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.x < self.threshold):
                 if self.out_going_direction == "straight":
-                    self.x -= self.speed
+                    # self.x -= self.speed
+                    self.change_speed('x', False)
                 elif self.out_going_direction == "left":
                     if self.x > current_turning_point:
-                        self.x -= self.speed
+                        self.change_speed('x', False)
                     else:
-                        self.y += self.speed
+                        self.change_speed('y', True)
 
                 else:
                     if self.x > current_turning_point:
-                        self.x -= self.speed
+                        self.change_speed('x', False)
                     else:
-                        self.y -= self.speed
+                        self.change_speed('y', False)
             else:
                 if self.x > self.threshold:
-                    self.x -= self.speed
+                    self.change_speed('x', False)
                     if self.waiting_time is None:
                         self.waiting_time = current_time
 
@@ -95,20 +105,20 @@ class Vehicle:
             if (current_traffic_light == "north" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.y > self.threshold):
                 if self.out_going_direction == "straight":
-                    self.y += self.speed
+                    self.change_speed('y', True)
                 elif self.out_going_direction == "left":
                     if self.y < current_turning_point:
-                        self.y += self.speed
+                        self.change_speed('y', True)
                     else:
-                        self.x += self.speed
+                        self.change_speed('x', True)
                 else:
                     if self.y < current_turning_point:
-                        self.y += self.speed
+                        self.change_speed('y', True)
                     else:
-                        self.x -= self.speed
+                        self.change_speed('x', False)
             else:
                 if self.y < self.threshold:
-                    self.y += self.speed
+                    self.change_speed('y', True)
                     if self.waiting_time is None:
                         self.waiting_time = current_time
 
@@ -117,30 +127,30 @@ class Vehicle:
             if (current_traffic_light == "south" and current_light_state == 'GREEN') or (
                     current_light_state in ["YELLOW", "RED"] and self.y < self.threshold):
                 if self.out_going_direction == "straight":
-                    self.y -= self.speed
+                    self.change_speed('y', False)
                 elif self.out_going_direction == "left":
                     if self.y > current_turning_point:
-                        self.y -= self.speed
+                        self.change_speed('y', False)
                     else:
-                        self.x -= self.speed
+                        self.change_speed('x', False)
                 else:
                     if self.y > current_turning_point:
-                        self.y -= self.speed
+                        self.change_speed('y', False)
                     else:
-                        self.x += self.speed
+                        self.change_speed('x', False)
             else:
                 if self.y > self.threshold:
-                    self.y -= self.speed
+                    self.change_speed('y', False)
                     if self.waiting_time is None:
                         self.waiting_time = current_time
 
-        # for other_vehicle in vehicle_list:
-        #     if self.is_too_close(other_vehicle):
-        #         self.x = self.previous_x
-        #         self.y = self.previous_y
-        #         break
+            # for other_vehicle in vehicle_list:
+            #     if self.is_too_close(other_vehicle):
+            #         self.x = self.previous_x
+            #         self.y = self.previous_y
+            #         break
 
-        return self.x, self.y
+            return self.x, self.y
 
     # def is_too_close(self, other_vehicle):
     #     """
@@ -183,4 +193,3 @@ class Vehicle:
                 return True, self.direction
 
         return False, None
-
