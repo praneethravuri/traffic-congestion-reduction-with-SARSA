@@ -18,9 +18,6 @@ class Vehicle:
         self.lane = None
         self.threshold = None
         self.has_crossed_threshold = False
-        # self.previous_x = None
-        # self.previous_y = None
-        # self.vehicle_gap = 2*self.radius + self.radius//2
         self.waiting_time = None
         self.id = uuid.uuid4()
 
@@ -78,11 +75,6 @@ class Vehicle:
                 self.change_speed('y', False)
 
     def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, current_time):
-        # self.previous_x = self.x
-        # self.previous_y = self.y
-        # too_close = any(self.is_too_close(other_vehicle) for other_vehicle in vehicle_list if
-        #                 other_vehicle.direction == self.direction)
-        # self.speed = self.speed * 0.5 if too_close else self.speed
         self.threshold = thresholds[self.direction]
         if self.out_going_direction == "left":
             current_turning_point = vehicle_turning_points["left"][self.direction]
@@ -135,26 +127,7 @@ class Vehicle:
                     if self.waiting_time is None:
                         self.waiting_time = current_time
 
-            # for other_vehicle in vehicle_list:
-            #     if self.is_too_close(other_vehicle):
-            #         self.x = self.previous_x
-            #         self.y = self.previous_y
-            #         break
-
             return self.x, self.y
-
-    # def is_too_close(self, other_vehicle):
-    #     """
-    #     Check if the current vehicle is too close to another vehicle.
-    #     """
-    #     if other_vehicle is self:
-    #         return False  # Skip self
-    #
-    #     if self.direction != other_vehicle.direction:
-    #         return False  # Check only vehicles in the same lane
-    #
-    #     distance = ((self.x - other_vehicle.x) ** 2 + (self.y - other_vehicle.y) ** 2) ** 0.5
-    #     return distance < self.vehicle_gap
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, [self.x, self.y], self.radius, self.width)
