@@ -50,6 +50,7 @@ class Vehicle:
                     self.change_speed('y', False)
                 else:
                     self.change_speed('x', False)
+
         # right turn logic and conditions
         elif turn_direction == "right":
             if self.direction == "west":
@@ -72,7 +73,8 @@ class Vehicle:
                 if self.y > current_turning_point:
                     self.change_speed('y', False)
                 else:
-                    self.change_speed('x', True)\
+                    self.change_speed('x', True)
+
         # go straight logic and conditions
         else:
             if self.direction == "west":
@@ -166,7 +168,7 @@ class Vehicle:
                 self.has_crossed_threshold = True
                 if self.waiting_time is not None:
                     waiting_time = pygame.time.get_ticks() - self.waiting_time
-                    print(f"{self.id} from {self.direction} waited for {waiting_time} milliseconds")
+                    # print(f"{self.id} from {self.direction} waited for {waiting_time} milliseconds")
                 return True, self.direction
 
         return False, None

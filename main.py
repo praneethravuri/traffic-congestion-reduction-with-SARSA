@@ -30,17 +30,45 @@ class Main:
         # distance from the center of the intersection to the center of the traffic light
         self.intersection_trl_width = self.road_width // 5
 
-        self.intersection_colors = {
-            "BLACK": (0, 0, 0),
-            "GREEN": (26, 93, 26),
-            "RED": (255, 0, 0),
-            "YELLOW": (255, 255, 0),
-            "GRAY": (128, 128, 128),
-            "WHITE": (255, 255, 255),
-            "BROWN": (185, 148, 112)
+        self.colors = {
+            "intersection": {
+                "BLACK": (0, 0, 0),
+                "GREEN": (26, 93, 26),
+                "RED": (255, 0, 0),
+                "YELLOW": (255, 255, 0),
+                "GRAY": (128, 128, 128),
+                "WHITE": (255, 255, 255),
+                "BROWN": (185, 148, 112)
+            },
+            "traffic_lights": {
+                "YELLOW_TR": (255, 255, 0),
+                "GREEN_TR": (78, 228, 78),
+                "RED_TR": (255, 0, 0)
+            },
+            "vehicle_direction": {
+                "straight": (255, 163, 60),
+                "left": (135, 196, 255),
+                "right": (255, 75, 145)
+            }
         }
 
-        # crossing thresholds
+        self.vehicle_parameters = {
+            "radius": 12,
+            "width": 12,
+            "gap": 12,
+            "speed": 0.25,
+            "incoming_direction": ["north", "east", "south", "west"],
+        }
+
+        self.traffic_light_parameters = {
+            "directions": ["north", "east", "south", "west"],
+            "timings": {
+                "RED": 5,
+                "GREEN": 5,
+                "YELLOW": 2
+            }
+        }
+
         self.thresholds = {
             "west": self.intersection_center[0] - self.road_width // 2 - self.intersection_trl_width - 30,
             "east": self.intersection_center[
@@ -49,37 +77,8 @@ class Main:
             "south": self.intersection_center[1] + self.road_width - 15
         }
 
-        # traffic light parameters and colors
-        self.trl_colors = {
-            "YELLOW_TR": (255, 255, 0),
-            "GREEN_TR": (78, 228, 78),
-            "RED_TR": (255, 0, 0)
-        }
+        self.starting_traffic_light = random.choice(self.traffic_light_parameters["directions"])
 
-        self.traffic_lights_directions = ["north", "east", "south", "west"]
-        # creating the starting point for the traffic light rotation
-        self.starting_traffic_light = random.choice(self.traffic_lights_directions)
-        self.traffic_light_change_times = {
-            "RED": 5,
-            "GREEN": 5,
-            "YELLOW": 2
-        }
-
-        # vehicle parameters
-        self.vehicle_radius = 12
-        self.vehicle_width = 12
-        self.vehicle_gap = 12
-        # vehicle speed
-        self.vehicle_speed = 0.25
-        # direction of a vehicle after the traffic light turns green
-        self.vehicle_direction_color = {
-            "straight": (255, 163, 60),
-            "left": (135, 196, 255),
-            "right": (255, 75, 145)
-        }
-        # the direction from which a vehicle is generated
-        self.vehicle_incoming_direction = ["north", "east", "south", "west"]
-        # vehicle spawn coordinates
         self.vehicle_spawn_coords = {
             "west": [0, self.intersection_center[1] + self.road_width // 4],
             "east": [2 * self.intersection_center[0], self.intersection_center[1] - self.road_width // 4],
@@ -102,15 +101,20 @@ class Main:
             }
         }
         self.vehicle_count = {"north": 0, "south": 0, "east": 0, "west": 0}
+
+        # threading parameters
         self.vehicle_list = []
-        self.font = pygame.font.SysFont(name=None, size=36)
         self.vehicle_list_lock = threading.Lock()
+
+        # font object
+        self.font = pygame.font.SysFont(name=None, size=36)
 
     def vehicle_generator(self, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
-            vehicle = Vehicle(self.screen, self.vehicle_radius, self.vehicle_width, self.vehicle_speed)
-            vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_incoming_direction,
-                                     self.vehicle_direction_color, self.vehicle_count)
+            vehicle = Vehicle(self.screen, self.vehicle_parameters["radius"], self.vehicle_parameters["width"],
+                              self.vehicle_parameters["speed"])
+            vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_parameters["incoming_direction"],
+                                     self.colors["vehicle_direction"], self.vehicle_count)
             with vehicle_list_lock:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
@@ -131,15 +135,16 @@ class Main:
         screen = pygame.display.set_mode((self.width, self.height))
 
         # Create Intersection, Crossing, and Traffic Lights
-        intersection = Intersection(screen, self.intersection_center, self.road_width, self.intersection_colors,
+        intersection = Intersection(screen, self.intersection_center, self.road_width, self.colors["intersection"],
                                     self.width, self.height, self.font)
         crossing = Crossing(screen, self.intersection_center, self.road_width, self.intersection_trl_width,
-                            self.intersection_colors)
+                            self.colors["intersection"])
         current_light_state = "GREEN"
         traffic_lights = TrafficLights(screen, self.starting_traffic_light, current_light_state,
-                                       self.traffic_lights_directions, self.trl_colors, self.traffic_light_width,
+                                       self.traffic_light_parameters["directions"], self.colors["traffic_lights"],
+                                       self.traffic_light_width,
                                        self.intersection_center, self.road_width, self.intersection_trl_width,
-                                       self.traffic_light_change_times)
+                                       self.traffic_light_parameters["timings"])
 
         # Vehicle management
         vehicle_list_lock = threading.Lock()
@@ -183,7 +188,7 @@ class Main:
                             self.vehicle_count[crossed_direction] -= 1
 
                 # print(self.vehicle_count)
-                self.display_vehicle_count(self.vehicle_count)
+                # self.display_vehicle_count(self.vehicle_count)
                 pygame.display.flip()
         except Exception as e:
             print(f"Error during main loop: {e}")
