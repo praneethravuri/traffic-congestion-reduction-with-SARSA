@@ -3,7 +3,6 @@ import random
 import threading
 import time
 import sys
-import logging
 from intersection import Intersection
 from crossing import Crossing
 from traffic_lights import TrafficLights
@@ -12,7 +11,6 @@ from vehicle import Vehicle
 
 class Main:
     def __init__(self):
-        # logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
         try:
             pygame.init()
@@ -129,7 +127,7 @@ class Main:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
 
-    def display_vehicle_count(self, vehicle_count, processed_vehicles):
+    def display_data(self, vehicle_count, processed_vehicles, dti):
         x, y = 20, 20
         line_spacing = 25
         color = (0, 0, 0)
@@ -139,9 +137,32 @@ class Main:
             self.screen.blit(text, (x, y))
             y += line_spacing
 
-        x_1, y_1 = 20, 120
+        x_1, y_1 = 20, y + line_spacing
         text_2 = self.font.render(f"Processed Vehicles: {str(sum(processed_vehicles.values()))}", True, color)
         self.screen.blit(text_2, (x_1, y_1))
+
+        x_2, y_2 = 20, y_1 + line_spacing
+        if dti != 0:
+            text_3 = self.font.render(f"DTI: {dti}", True, color)
+            self.screen.blit(text_3, (x_2, y_2))
+        else:
+            text_3 = self.font.render("DTI: 0", True, color)
+            self.screen.blit(text_3, (x_2, y_2))
+
+    # METRIC - 1
+    def calculate_dti(self):
+        lane_delay_times = {direction: round(sum(values), 2) for direction, values in
+                            self.vehicle_parameters["wait_times"].items()}
+
+        # METRIC - 2
+        lane_vehicle_count = {direction: len(values) for direction, values in
+                              self.vehicle_parameters["wait_times"].items()}
+
+        total_delay_time = sum(lane_delay_times.values())
+        total_waiting_vehicles = sum(lane_vehicle_count.values())
+
+        if total_waiting_vehicles > 0:
+            self.dti = round(total_delay_time / total_waiting_vehicles, 3)
 
     def run(self):
 
@@ -200,28 +221,19 @@ class Main:
                         has_crossed, crossed_direction = vehicle.crossed_threshold()
                         if has_crossed:
                             self.vehicle_parameters["vehicle_count"][crossed_direction] -= 1
-                self.display_vehicle_count(self.vehicle_parameters["vehicle_count"],
-                                           self.vehicle_parameters["processed_vehicles"])
+
+                self.calculate_dti()
+                self.display_data(self.vehicle_parameters["vehicle_count"],
+                                  self.vehicle_parameters["processed_vehicles"], self.dti)
                 # total_delay = sum([sum(times) for times in self.vehicle_parameters["wait_times"].values()])
+
+                # SECOND METRIC!!!
                 # waiting_vehicles = sum([len(times) for times in self.vehicle_parameters["wait_times"].values()])
                 #
                 # if waiting_vehicles > 0:
                 #     print(f"DTI: {total_delay}")
 
                 # print(self.vehicle_parameters["wait_times"])
-                lane_delay_times = {direction: round(sum(values), 2) for direction, values in
-                                    self.vehicle_parameters["wait_times"].items()}
-                lane_vehicle_count = {direction: len(values) for direction, values in
-                                      self.vehicle_parameters["wait_times"].items()}
-                # print(f"Direction Delay times: {lane_delay_times}")
-                # print(f"Lane vehicle count: {lane_vehicle_count}")
-
-                total_delay_time = sum(lane_delay_times.values())
-                total_waiting_vehicles = sum(lane_vehicle_count.values())
-
-                if total_waiting_vehicles > 0:
-                    self.dti = total_delay_time / total_waiting_vehicles
-                    print(f"DTI: {self.dti}")
 
                 pygame.display.flip()
         except Exception as e:

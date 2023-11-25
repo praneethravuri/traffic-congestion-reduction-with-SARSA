@@ -46,7 +46,7 @@ class TrafficLights:
         light_color = self.trl_colors[self.current_light_state + "_TR"]
 
         # Set the color of the current traffic light
-        colors = {dir: self.trl_colors["RED_TR"] for dir in ["north", "south", "east", "west"]}
+        colors = {dr: self.trl_colors["RED_TR"] for dr in ["north", "south", "east", "west"]}
         colors[self.current_traffic_light] = light_color
 
         # Drawing traffic lights for all directions
