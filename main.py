@@ -58,6 +58,7 @@ class Main:
             "gap": 12,
             "speed": 0.25,
             "incoming_direction": ["north", "east", "south", "west"],
+            "vehicle_count": {"north": 0, "south": 0, "east": 0, "west": 0}
         }
 
         self.traffic_light_parameters = {
@@ -100,7 +101,6 @@ class Main:
                 "south": self.intersection_center[1] + self.road_width // 4
             }
         }
-        self.vehicle_count = {"north": 0, "south": 0, "east": 0, "west": 0}
 
         # threading parameters
         self.vehicle_list = []
@@ -114,7 +114,7 @@ class Main:
             vehicle = Vehicle(self.screen, self.vehicle_parameters["radius"], self.vehicle_parameters["width"],
                               self.vehicle_parameters["speed"])
             vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_parameters["incoming_direction"],
-                                     self.colors["vehicle_direction"], self.vehicle_count)
+                                     self.colors["vehicle_direction"], self.vehicle_parameters["vehicle_count"])
             with vehicle_list_lock:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
@@ -185,7 +185,7 @@ class Main:
 
                         has_crossed, crossed_direction = vehicle.crossed_threshold()
                         if has_crossed:
-                            self.vehicle_count[crossed_direction] -= 1
+                            self.vehicle_parameters["vehicle_count"][crossed_direction] -= 1
 
                 # print(self.vehicle_count)
                 # self.display_vehicle_count(self.vehicle_count)
