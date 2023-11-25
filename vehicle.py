@@ -4,11 +4,13 @@ import uuid
 
 
 class Vehicle:
-    def __init__(self, screen, radius, width, speed):
+    def __init__(self, screen, radius, width, speed, wait_times, processed_vehicles):
         self.screen, self.radius, self.width, self.speed = screen, radius, width, speed
         self.x, self.y, self.direction, self.color = None, None, None, None
         self.moving, self.out_going_direction, self.lane, self.threshold = True, None, None, None
         self.has_crossed_threshold, self.waiting_time, self.id = False, None, uuid.uuid4()
+        self.wait_times = wait_times
+        self.processed_vehicles = processed_vehicles
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -166,9 +168,10 @@ class Vehicle:
 
             if crossed:
                 self.has_crossed_threshold = True
+                self.processed_vehicles[self.direction] += 1
                 if self.waiting_time is not None:
-                    waiting_time = pygame.time.get_ticks() - self.waiting_time
-                    # print(f"{self.id} from {self.direction} waited for {waiting_time} milliseconds")
+                    current_wait_time = round((pygame.time.get_ticks() - self.waiting_time)/1000, 2)
+                    self.wait_times[self.direction].append(current_wait_time)
                 return True, self.direction
 
         return False, None

@@ -3,6 +3,7 @@ import random
 import threading
 import time
 import sys
+import logging
 from intersection import Intersection
 from crossing import Crossing
 from traffic_lights import TrafficLights
@@ -11,6 +12,7 @@ from vehicle import Vehicle
 
 class Main:
     def __init__(self):
+        # logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
         try:
             pygame.init()
@@ -58,7 +60,9 @@ class Main:
             "gap": 12,
             "speed": 0.25,
             "incoming_direction": ["north", "east", "south", "west"],
-            "vehicle_count": {"north": 0, "south": 0, "east": 0, "west": 0}
+            "vehicle_count": {"north": 0, "south": 0, "east": 0, "west": 0},
+            "wait_times": {"north": [], "south": [], "east": [], "west": []},
+            "processed_vehicles": {"north": 0, "south": 0, "east": 0, "west": 0},
         }
 
         self.traffic_light_parameters = {
@@ -107,19 +111,25 @@ class Main:
         self.vehicle_list_lock = threading.Lock()
 
         # font object
-        self.font = pygame.font.SysFont(name=None, size=36)
+        self.font = pygame.font.SysFont(pygame.font.get_default_font(), 36)
+
+        # sarsa metrics
+
+        # delay time indicator
+        self.dti = 0
 
     def vehicle_generator(self, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
             vehicle = Vehicle(self.screen, self.vehicle_parameters["radius"], self.vehicle_parameters["width"],
-                              self.vehicle_parameters["speed"])
+                              self.vehicle_parameters["speed"], self.vehicle_parameters["wait_times"],
+                              self.vehicle_parameters["processed_vehicles"])
             vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_parameters["incoming_direction"],
                                      self.colors["vehicle_direction"], self.vehicle_parameters["vehicle_count"])
             with vehicle_list_lock:
                 self.vehicle_list.append(vehicle)
             time.sleep(0.5)
 
-    def display_vehicle_count(self, vehicle_count):
+    def display_vehicle_count(self, vehicle_count, processed_vehicles):
         x, y = 20, 20
         line_spacing = 25
         color = (0, 0, 0)
@@ -128,6 +138,10 @@ class Main:
             text = self.font.render(content, True, color)
             self.screen.blit(text, (x, y))
             y += line_spacing
+
+        x_1, y_1 = 20, 120
+        text_2 = self.font.render(f"Processed Vehicles: {str(sum(processed_vehicles.values()))}", True, color)
+        self.screen.blit(text_2, (x_1, y_1))
 
     def run(self):
 
@@ -186,9 +200,29 @@ class Main:
                         has_crossed, crossed_direction = vehicle.crossed_threshold()
                         if has_crossed:
                             self.vehicle_parameters["vehicle_count"][crossed_direction] -= 1
+                self.display_vehicle_count(self.vehicle_parameters["vehicle_count"],
+                                           self.vehicle_parameters["processed_vehicles"])
+                # total_delay = sum([sum(times) for times in self.vehicle_parameters["wait_times"].values()])
+                # waiting_vehicles = sum([len(times) for times in self.vehicle_parameters["wait_times"].values()])
+                #
+                # if waiting_vehicles > 0:
+                #     print(f"DTI: {total_delay}")
 
-                # print(self.vehicle_count)
-                # self.display_vehicle_count(self.vehicle_count)
+                # print(self.vehicle_parameters["wait_times"])
+                lane_delay_times = {direction: round(sum(values), 2) for direction, values in
+                                    self.vehicle_parameters["wait_times"].items()}
+                lane_vehicle_count = {direction: len(values) for direction, values in
+                                      self.vehicle_parameters["wait_times"].items()}
+                # print(f"Direction Delay times: {lane_delay_times}")
+                # print(f"Lane vehicle count: {lane_vehicle_count}")
+
+                total_delay_time = sum(lane_delay_times.values())
+                total_waiting_vehicles = sum(lane_vehicle_count.values())
+
+                if total_waiting_vehicles > 0:
+                    self.dti = total_delay_time / total_waiting_vehicles
+                    print(f"DTI: {self.dti}")
+
                 pygame.display.flip()
         except Exception as e:
             print(f"Error during main loop: {e}")
