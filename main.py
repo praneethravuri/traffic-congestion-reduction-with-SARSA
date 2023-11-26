@@ -3,6 +3,7 @@ import random
 import threading
 import time
 import sys
+import traceback
 from intersection import Intersection
 from crossing import Crossing
 from traffic_lights import TrafficLights
@@ -60,6 +61,7 @@ class Main:
             "incoming_direction": ["north", "east", "south", "west"],
             "vehicle_count": {"north": 0, "south": 0, "east": 0, "west": 0},
             "processed_vehicles": {"north": 0, "south": 0, "east": 0, "west": 0},
+            "stoppage_time": {"north": {}, "south": {}, "east": {}, "west": {}}
         }
 
         self.traffic_light_parameters = {
@@ -114,7 +116,7 @@ class Main:
         while not stop_event.is_set():
             vehicle = Vehicle(self.screen, self.vehicle_parameters["radius"], self.vehicle_parameters["width"],
                               self.vehicle_parameters["speed"],
-                              self.vehicle_parameters["processed_vehicles"])
+                              self.vehicle_parameters["processed_vehicles"], self.vehicle_parameters["stoppage_time"])
             vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_parameters["incoming_direction"],
                                      self.colors["vehicle_direction"], self.vehicle_parameters["vehicle_count"])
             with vehicle_list_lock:
@@ -184,7 +186,7 @@ class Main:
                 with vehicle_list_lock:
                     for vehicle in self.vehicle_list:  # Note the use of self here
                         vehicle.move(current_traffic_light, current_light_state, self.thresholds,
-                                     self.vehicle_turning_points, current_time)
+                                     self.vehicle_turning_points)
                         vehicle.draw()
                         if vehicle.kill_vehicle(self.width, self.height):
                             self.vehicle_list.remove(vehicle)
@@ -195,10 +197,11 @@ class Main:
 
                 self.display_data(self.vehicle_parameters["vehicle_count"],
                                   self.vehicle_parameters["processed_vehicles"])
-
+                print(self.vehicle_parameters["stoppage_time"])
                 pygame.display.flip()
         except Exception as e:
-            print(f"Error during main loop: {e}")
+            print(f"Error during main loop: {e}", end='\r')
+            traceback.print_exc()
             sys.exit(1)
 
         # Clean up and exit

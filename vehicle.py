@@ -1,15 +1,18 @@
 import pygame
 import random
 import uuid
+import time
 
 
 class Vehicle:
-    def __init__(self, screen, radius, width, speed, processed_vehicles):
+    def __init__(self, screen, radius, width, speed, processed_vehicles, stoppage_time):
         self.screen, self.radius, self.width, self.speed = screen, radius, width, speed
         self.x, self.y, self.direction, self.color = None, None, None, None
         self.moving, self.out_going_direction, self.lane, self.threshold = True, None, None, None
         self.has_crossed_threshold, self.id = False, uuid.uuid4()
         self.processed_vehicles = processed_vehicles
+        self.start_stop_time = None
+        self.stoppage_time = stoppage_time
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -87,7 +90,8 @@ class Vehicle:
             else:
                 self.change_speed('y', False)
 
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points, current_time):
+    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
+        prev_x, prev_y = self.x, self.y
         # taking the threshold of the vehicles depending on its outgoing direction and lane
         self.threshold = thresholds[self.direction]
 
@@ -135,7 +139,24 @@ class Vehicle:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
 
-            return self.x, self.y
+        # the vehicle has not moved, so start the timer
+        if (self.x, self.y) == (prev_x, prev_y):
+            if self.start_stop_time is None:
+                self.start_stop_time = time.time()
+
+        # the vehicle has moved and we should stop the timer
+        else:
+            if self.start_stop_time is not None:
+                stop_stop_time = time.time()
+                total_delay = stop_stop_time - self.start_stop_time
+                # print(f"Vehicle {self.id} from {self.direction} direction stopped for {total_delay} seconds")
+                if self.id not in self.stoppage_time[self.direction]:
+                    self.stoppage_time[self.direction][self.id] = total_delay
+                else:
+                    self.stoppage_time[self.direction][self.id] += total_delay
+                self.start_stop_time = None
+
+        return self.x, self.y
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, [self.x, self.y], self.radius, self.width)
@@ -160,6 +181,9 @@ class Vehicle:
             if crossed:
                 self.has_crossed_threshold = True
                 self.processed_vehicles[self.direction] += 1
+                # delete the delay of a vehicle if it has crossed the threshold
+                if self.id in self.stoppage_time[self.direction]:
+                    del self.stoppage_time[self.direction][self.id]
                 return True, self.direction
 
         return False, None
