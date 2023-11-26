@@ -4,12 +4,11 @@ import uuid
 
 
 class Vehicle:
-    def __init__(self, screen, radius, width, speed, wait_times, processed_vehicles):
+    def __init__(self, screen, radius, width, speed, processed_vehicles):
         self.screen, self.radius, self.width, self.speed = screen, radius, width, speed
         self.x, self.y, self.direction, self.color = None, None, None, None
         self.moving, self.out_going_direction, self.lane, self.threshold = True, None, None, None
-        self.has_crossed_threshold, self.waiting_time, self.id = False, None, uuid.uuid4()
-        self.wait_times = wait_times
+        self.has_crossed_threshold, self.id = False, uuid.uuid4()
         self.processed_vehicles = processed_vehicles
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
@@ -108,8 +107,6 @@ class Vehicle:
             else:
                 if self.x < self.threshold:
                     self.change_speed('x', True)
-                    if self.waiting_time is None:
-                        self.waiting_time = current_time
 
         # For vehicle coming from the east
         elif self.direction == "east":
@@ -119,8 +116,6 @@ class Vehicle:
             else:
                 if self.x > self.threshold:
                     self.change_speed('x', False)
-                    if self.waiting_time is None:
-                        self.waiting_time = current_time
 
         # For vehicle coming from the north
         elif self.direction == "north":
@@ -130,8 +125,6 @@ class Vehicle:
             else:
                 if self.y < self.threshold:
                     self.change_speed('y', True)
-                    if self.waiting_time is None:
-                        self.waiting_time = current_time
 
         # For vehicle coming from the south
         elif self.direction == "south":
@@ -141,8 +134,6 @@ class Vehicle:
             else:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
-                    if self.waiting_time is None:
-                        self.waiting_time = current_time
 
             return self.x, self.y
 
@@ -169,9 +160,6 @@ class Vehicle:
             if crossed:
                 self.has_crossed_threshold = True
                 self.processed_vehicles[self.direction] += 1
-                if self.waiting_time is not None:
-                    current_wait_time = round((pygame.time.get_ticks() - self.waiting_time)/1000, 2)
-                    self.wait_times[self.direction].append(current_wait_time)
                 return True, self.direction
 
         return False, None
