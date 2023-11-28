@@ -173,7 +173,7 @@ class Vehicle:
         #     if self.start_stop_time is None:
         #         self.start_stop_time = time.time()
         #
-        # # the vehicle has moved and we should stop the timer
+        # # the vehicle has moved, and we should stop the timer
         # else:
         #     if self.start_stop_time is not None:
         #         stop_stop_time = time.time()

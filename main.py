@@ -118,7 +118,8 @@ class Main:
 
         self.last_action_time = None
 
-    def calculate_reward(self, old_dti, new_dti):
+    @staticmethod
+    def calculate_reward(old_dti, new_dti):
         # Reward for reducing the DTI in the most congested lane
         max_reduction = max(old_dti.values()) - max(new_dti.values())
         return max_reduction

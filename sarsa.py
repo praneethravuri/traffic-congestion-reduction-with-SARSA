@@ -1,5 +1,4 @@
 import numpy as np
-import random
 
 
 class SARSA:
@@ -23,5 +22,3 @@ class SARSA:
         predict = self.q_table[state, action]
         target = reward + self.gamma * self.q_table[next_state, next_action]
         self.q_table[state, action] += self.alpha * (target - predict)
-
-
