@@ -8,6 +8,7 @@ from intersection import Intersection
 from crossing import Crossing
 from traffic_lights import TrafficLights
 from vehicle import Vehicle
+from sarsa import SARSA
 
 
 class Main:
