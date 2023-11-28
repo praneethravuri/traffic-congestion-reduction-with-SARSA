@@ -68,9 +68,9 @@ class Main:
         self.traffic_light_parameters = {
             "directions": ["north", "east", "south", "west"],
             "timings": {
-                "RED": 20,
-                "GREEN": 20,
-                "YELLOW": 10
+                "RED": 120,
+                "GREEN": 120,
+                "YELLOW": 50
             }
         }
 
@@ -228,20 +228,21 @@ class Main:
                 current_time = pygame.time.get_ticks()
                 current_traffic_light, current_light_state = traffic_lights.update(current_time)
 
-                if traffic_lights.green_light_start_time is None or \
-                        current_time - traffic_lights.green_light_start_time >= 20000:  # 120 seconds in milliseconds
-                    current_state = self.calculate_state(max_dti, old_dti)
-                    current_action = self.sarsa_agent.choose_action(current_state)
-                    self.apply_action(current_action, traffic_lights)
-                    # Update the DTI and SARSA state after the action
-                    new_dti = self.calculate_dti()
-                    new_state = self.calculate_state(max_dti, new_dti)
-                    reward = self.calculate_reward(old_dti, new_dti)
-                    next_action = self.sarsa_agent.choose_action(new_state)
-                    self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
-                    current_state = new_state
-                    old_dti = new_dti
-                    current_action = next_action
+                self.apply_action(current_action, traffic_lights)  # Pass traffic_lights as a parameter
+                new_dti = self.calculate_dti()
+
+                # Calculate new state and reward
+                new_state = self.calculate_state(max_dti, new_dti)
+                reward = self.calculate_reward(old_dti, new_dti)
+
+                # Choose the next action and update SARSA
+                next_action = self.sarsa_agent.choose_action(new_state)
+                self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
+
+                # Update the current state and DTI for the next iteration
+                current_state = new_state
+                old_dti = new_dti
+                current_action = next_action
 
                 # Draw the intersection, traffic lights, and crossing
                 intersection.draw()
