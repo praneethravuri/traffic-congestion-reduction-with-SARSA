@@ -182,8 +182,8 @@ class Vehicle:
                 self.has_crossed_threshold = True
                 self.processed_vehicles[self.direction] += 1
                 # delete the delay of a vehicle if it has crossed the threshold
-                # if self.id in self.dti_info[self.direction]:
-                #     del self.dti_info[self.direction][self.id]
+                if self.id in self.dti_info[self.direction]:
+                    del self.dti_info[self.direction][self.id]
                 return True, self.direction
 
         return False, None

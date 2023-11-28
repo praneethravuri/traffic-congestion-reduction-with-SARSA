@@ -68,9 +68,9 @@ class Main:
         self.traffic_light_parameters = {
             "directions": ["north", "east", "south", "west"],
             "timings": {
-                "RED": 5,
-                "GREEN": 5,
-                "YELLOW": 2
+                "RED": 20,
+                "GREEN": 20,
+                "YELLOW": 10
             }
         }
 
@@ -112,6 +112,37 @@ class Main:
 
         # font object
         self.font = pygame.font.SysFont(pygame.font.get_default_font(), 36)
+
+        self.sarsa_agent = None
+        self.initialize_sarsa()
+
+    def calculate_reward(self, old_dti, new_dti):
+        # Reward for reducing the DTI in the most congested lane
+        max_reduction = max(old_dti.values()) - max(new_dti.values())
+        return max_reduction
+
+    def apply_action(self, action, traffic_lights):
+        directions = ["north", "east", "south", "west"]
+        chosen_direction = directions[action]
+        # Logic to change the traffic light to the chosen direction
+        traffic_lights.change_light(chosen_direction)  # Assuming this method exists in TrafficLights
+
+    def calculate_state(self, max_dti, old_dti):
+        # Discretize the DTI values
+        dti = self.calculate_dti()
+        state = 0
+        dti_levels = 10  # Example: 10 levels of DTI
+        for direction, value in dti.items():
+            state += int(value // (max_dti / dti_levels)) * dti_levels
+        return state
+
+    def initialize_sarsa(self):
+        # Define the number of states and actions
+        number_of_states = 100  # Example value, adjust based on your discretization
+        number_of_actions = 4  # 4 directions for traffic lights
+        self.sarsa_agent = SARSA(alpha=0.1, gamma=0.9, epsilon=0.1,
+                                 number_of_states=number_of_states,
+                                 number_of_actions=number_of_actions)
 
     def vehicle_generator(self, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
@@ -177,6 +208,13 @@ class Main:
         except RuntimeError as e:
             print(f"Error starting thread: {e}")
 
+        max_dti = 1000.0  # Set this to a reasonable upper estimate based on your simulation data.
+
+        # Initialize the current state and action
+        old_dti = self.calculate_dti()
+        current_state = self.calculate_state(max_dti, old_dti)  # Pass max_dti as a parameter
+        current_action = self.sarsa_agent.choose_action(current_state)
+
         # Main loop
         running = True
         try:
@@ -185,8 +223,25 @@ class Main:
                     if event.type == pygame.QUIT:
                         running = False
 
+                # In the main loop
+
                 current_time = pygame.time.get_ticks()
                 current_traffic_light, current_light_state = traffic_lights.update(current_time)
+
+                if traffic_lights.green_light_start_time is None or \
+                        current_time - traffic_lights.green_light_start_time >= 20000:  # 120 seconds in milliseconds
+                    current_state = self.calculate_state(max_dti, old_dti)
+                    current_action = self.sarsa_agent.choose_action(current_state)
+                    self.apply_action(current_action, traffic_lights)
+                    # Update the DTI and SARSA state after the action
+                    new_dti = self.calculate_dti()
+                    new_state = self.calculate_state(max_dti, new_dti)
+                    reward = self.calculate_reward(old_dti, new_dti)
+                    next_action = self.sarsa_agent.choose_action(new_state)
+                    self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
+                    current_state = new_state
+                    old_dti = new_dti
+                    current_action = next_action
 
                 # Draw the intersection, traffic lights, and crossing
                 intersection.draw()

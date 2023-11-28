@@ -19,10 +19,10 @@ class SARSA:
 
         return action
 
-    def learn(self, state, action, reward, next_state, next_action):
+    def update(self, state, action, reward, next_state, next_action):
         predict = self.q_table[state, action]
         target = reward + self.gamma * self.q_table[next_state, next_action]
-        self.q_table[state, action] += self.alpha * (target - predict)
+        self.q_table[state, action] = self.q_table[state, action] + self.alpha * (target - predict)
 
 # def run(self):
 #     sarsa = SARSA(alpha=0.1, gamma=0.9, epsilon=0.1, number_of_states=NUM_STATES, number_of_actions=NUM_ACTIONS)
