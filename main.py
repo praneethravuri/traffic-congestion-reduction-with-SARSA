@@ -61,7 +61,7 @@ class Main:
             "incoming_direction": ["north", "east", "south", "west"],
             "vehicle_count": {"north": 0, "south": 0, "east": 0, "west": 0},
             "processed_vehicles": {"north": 0, "south": 0, "east": 0, "west": 0},
-            "stoppage_time": {"north": {}, "south": {}, "east": {}, "west": {}}
+            "dti_info": {"north": {}, "south": {}, "east": {}, "west": {}}
         }
 
         self.traffic_light_parameters = {
@@ -116,7 +116,7 @@ class Main:
         while not stop_event.is_set():
             vehicle = Vehicle(self.screen, self.vehicle_parameters["radius"], self.vehicle_parameters["width"],
                               self.vehicle_parameters["speed"],
-                              self.vehicle_parameters["processed_vehicles"], self.vehicle_parameters["stoppage_time"])
+                              self.vehicle_parameters["processed_vehicles"], self.vehicle_parameters["dti_info"])
             vehicle.generate_vehicle(self.vehicle_spawn_coords, self.vehicle_parameters["incoming_direction"],
                                      self.colors["vehicle_direction"], self.vehicle_parameters["vehicle_count"])
             with vehicle_list_lock:
@@ -136,6 +136,16 @@ class Main:
         x_1, y_1 = 20, y + line_spacing
         text_2 = self.font.render(f"Processed Vehicles: {str(sum(processed_vehicles.values()))}", True, color)
         self.screen.blit(text_2, (x_1, y_1))
+
+    def calculate_dti(self):
+        ans = {}
+        for main_key in self.vehicle_parameters["dti_info"].keys():
+            total = 0
+            for k, v in self.vehicle_parameters["dti_info"][main_key].items():
+                total += v
+            ans[main_key] = round(total, 2)
+
+        return ans
 
     def run(self):
 
@@ -197,7 +207,8 @@ class Main:
 
                 self.display_data(self.vehicle_parameters["vehicle_count"],
                                   self.vehicle_parameters["processed_vehicles"])
-                print(self.vehicle_parameters["stoppage_time"])
+                # print(self.vehicle_parameters["dti_info"])
+                print(self.calculate_dti())
                 pygame.display.flip()
         except Exception as e:
             print(f"Error during main loop: {e}", end='\r')

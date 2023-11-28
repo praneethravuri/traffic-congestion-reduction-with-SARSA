@@ -5,14 +5,14 @@ import time
 
 
 class Vehicle:
-    def __init__(self, screen, radius, width, speed, processed_vehicles, stoppage_time):
+    def __init__(self, screen, radius, width, speed, processed_vehicles, dti_info):
         self.screen, self.radius, self.width, self.speed = screen, radius, width, speed
         self.x, self.y, self.direction, self.color = None, None, None, None
         self.moving, self.out_going_direction, self.lane, self.threshold = True, None, None, None
         self.has_crossed_threshold, self.id = False, uuid.uuid4()
         self.processed_vehicles = processed_vehicles
         self.start_stop_time = None
-        self.stoppage_time = stoppage_time
+        self.dti_info = dti_info
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -150,10 +150,10 @@ class Vehicle:
                 stop_stop_time = time.time()
                 total_delay = stop_stop_time - self.start_stop_time
                 # print(f"Vehicle {self.id} from {self.direction} direction stopped for {total_delay} seconds")
-                if self.id not in self.stoppage_time[self.direction]:
-                    self.stoppage_time[self.direction][self.id] = total_delay
+                if self.id not in self.dti_info[self.direction]:
+                    self.dti_info[self.direction][self.id] = total_delay
                 else:
-                    self.stoppage_time[self.direction][self.id] += total_delay
+                    self.dti_info[self.direction][self.id] += total_delay
                 self.start_stop_time = None
 
         return self.x, self.y
@@ -182,8 +182,8 @@ class Vehicle:
                 self.has_crossed_threshold = True
                 self.processed_vehicles[self.direction] += 1
                 # delete the delay of a vehicle if it has crossed the threshold
-                if self.id in self.stoppage_time[self.direction]:
-                    del self.stoppage_time[self.direction][self.id]
+                # if self.id in self.dti_info[self.direction]:
+                #     del self.dti_info[self.direction][self.id]
                 return True, self.direction
 
         return False, None
