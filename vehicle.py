@@ -219,7 +219,6 @@ class Vehicle:
                 # delete the delay of a vehicle if it has crossed the threshold
                 if self.id in self.dti_info[self.direction]:
                     del self.dti_info[self.direction][self.id]
-                    print(f"removed {self.id} vehicle")
                 return True, self.direction
 
         return False, None
