@@ -42,14 +42,6 @@ class TrafficLights:
 
         pygame.draw.rect(self.screen, color, (*position, *size))
 
-    def change_light(self, direction):
-        # Change the current traffic light to the specified direction
-        if direction in self.traffic_lights_directions:
-            self.current_traffic_light = direction
-            self.current_traffic_light_index = self.traffic_lights_directions.index(direction)
-            self.current_light_state = "GREEN"  # Assuming you want to change it directly to green
-            self.last_change_time = pygame.time.get_ticks()
-
     def draw(self):
         light_color = self.trl_colors[self.current_light_state + "_TR"]
 
@@ -79,4 +71,18 @@ class TrafficLights:
             self.last_change_time = current_time
 
         self.current_traffic_light = self.traffic_lights_directions[self.current_traffic_light_index]
-        return self.current_traffic_light, self.current_light_state
+
+        current_traffic_light_colors = {direction: "RED" for direction in self.traffic_lights_directions}
+        current_traffic_light_colors[self.current_traffic_light] = self.current_light_state
+
+        # print(f"Traffic light color: {current_traffic_light_colors}")
+
+        return self.current_traffic_light, self.current_light_state, current_traffic_light_colors
+
+    def change_light(self, direction):
+        # Change the current traffic light to the specified direction
+        if direction in self.traffic_lights_directions:
+            self.current_traffic_light = direction
+            self.current_traffic_light_index = self.traffic_lights_directions.index(direction)
+            self.current_light_state = "GREEN"  # Assuming you want to change it directly to green
+            self.last_change_time = pygame.time.get_ticks()

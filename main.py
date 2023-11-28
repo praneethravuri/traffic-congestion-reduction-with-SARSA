@@ -68,9 +68,9 @@ class Main:
         self.traffic_light_parameters = {
             "directions": ["north", "east", "south", "west"],
             "timings": {
-                "RED": 120,
-                "GREEN": 120,
-                "YELLOW": 50
+                "RED": 5,
+                "GREEN": 5,
+                "YELLOW": 2
             }
         }
 
@@ -208,12 +208,12 @@ class Main:
         except RuntimeError as e:
             print(f"Error starting thread: {e}")
 
-        max_dti = 1000.0  # Set this to a reasonable upper estimate based on your simulation data.
-
-        # Initialize the current state and action
-        old_dti = self.calculate_dti()
-        current_state = self.calculate_state(max_dti, old_dti)  # Pass max_dti as a parameter
-        current_action = self.sarsa_agent.choose_action(current_state)
+        # max_dti = 1000.0  # Set this to a reasonable upper estimate based on your simulation data.
+        #
+        # # Initialize the current state and action
+        # old_dti = self.calculate_dti()
+        # current_state = self.calculate_state(max_dti, old_dti)  # Pass max_dti as a parameter
+        # current_action = self.sarsa_agent.choose_action(current_state)
 
         # Main loop
         running = True
@@ -223,26 +223,29 @@ class Main:
                     if event.type == pygame.QUIT:
                         running = False
 
+                current_time = pygame.time.get_ticks()
+                current_traffic_light, current_light_state, current_traffic_light_colors = traffic_lights.update(
+                    current_time)
                 # In the main loop
 
-                current_time = pygame.time.get_ticks()
-                current_traffic_light, current_light_state = traffic_lights.update(current_time)
-
-                self.apply_action(current_action, traffic_lights)  # Pass traffic_lights as a parameter
-                new_dti = self.calculate_dti()
-
-                # Calculate new state and reward
-                new_state = self.calculate_state(max_dti, new_dti)
-                reward = self.calculate_reward(old_dti, new_dti)
-
-                # Choose the next action and update SARSA
-                next_action = self.sarsa_agent.choose_action(new_state)
-                self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
-
-                # Update the current state and DTI for the next iteration
-                current_state = new_state
-                old_dti = new_dti
-                current_action = next_action
+                # current_time = pygame.time.get_ticks()
+                # current_traffic_light, current_light_state = traffic_lights.update(current_time)
+                #
+                # self.apply_action(current_action, traffic_lights)  # Pass traffic_lights as a parameter
+                # new_dti = self.calculate_dti()
+                #
+                # # Calculate new state and reward
+                # new_state = self.calculate_state(max_dti, new_dti)
+                # reward = self.calculate_reward(old_dti, new_dti)
+                #
+                # # Choose the next action and update SARSA
+                # next_action = self.sarsa_agent.choose_action(new_state)
+                # self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
+                #
+                # # Update the current state and DTI for the next iteration
+                # current_state = new_state
+                # old_dti = new_dti
+                # current_action = next_action
 
                 # Draw the intersection, traffic lights, and crossing
                 intersection.draw()
@@ -252,8 +255,9 @@ class Main:
                 # Process and draw vehicles
                 with vehicle_list_lock:
                     for vehicle in self.vehicle_list:  # Note the use of self here
-                        vehicle.move(current_traffic_light, current_light_state, self.thresholds,
-                                     self.vehicle_turning_points)
+                        # change the second parameter
+                        vehicle.move(self.vehicle_list, current_traffic_light, current_light_state, self.thresholds,
+                                     self.vehicle_turning_points, current_traffic_light_colors)
                         vehicle.draw()
                         if vehicle.kill_vehicle(self.width, self.height):
                             self.vehicle_list.remove(vehicle)
