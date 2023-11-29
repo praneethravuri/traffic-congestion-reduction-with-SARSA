@@ -1,6 +1,5 @@
 from main import Main
 import pygame
-import time
 
 
 def train(episodes):
@@ -13,34 +12,65 @@ def train(episodes):
         current_state = environment.calculate_state()
         current_action = environment.sarsa_agent.choose_action(current_state)
 
+        # Initialize old_dti at the start of each episode
         environment.old_dti = environment.calculate_dti()
+        done = True
+        while done:
+            print(f"Episode number: {episode+1}")
 
-        # Start the timer
-        start_time = time.time()
+            # Handle Pygame events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    done = False
 
-        done = False
-        while not done:
-            # Check for elapsed time
-            current_time = time.time()
-            if current_time - start_time >= 60:  # 60 seconds for 1 minute
-                done = True
+            # Apply the chosen action
+            environment.apply_action(current_action, environment.traffic_lights)
 
-            # Other training code here...
-            # Handle Pygame events, apply actions, simulate steps, etc.
+            # Inside the train function, within the while not done loop
+            # environment.simulate_step()
+            # print("simulate step")
 
-            # Print the episode number and update the display
-            print(f"Episode number: {episode}")
-            environment.run()
+            # Simulate environment's step here
+            # This should include moving vehicles and updating DTI
+
+            # Calculate the new DTI
+            new_dti = environment.calculate_dti()
+
+            # Calculate the reward
+            reward = environment.calculate_reward(environment.old_dti, new_dti)
+
+            # Update the SARSA agent
+            new_state = environment.calculate_state()
+            next_action = environment.sarsa_agent.choose_action(new_state)
+            environment.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
+
+            # Update variables for the next iteration
+            total_reward += reward
+            environment.old_dti = new_dti
+            current_state = new_state
+            current_action = next_action
+
+            # Update the display
+            episode_over = environment.run()
+
+            if episode_over:
+                print(f"Episode {episode + 1} completed.")
+                done = False
+            else:
+                print(f"Episode {episode + 1} ended prematurely.")
+                done = False
 
             # Limit the frame rate for visibility
             pygame.time.delay(100)
 
-        # End of episode
+            # if sum(environment.vehicle_parameters["processed_vehicles"].values()) > 1:
+            #     print("here")
+            #     done = True
+
         print(f"Episode {episode + 1}: Total Reward: {total_reward}")
 
-    # Save the model after all episodes
     environment.save_model()
 
 
 if __name__ == "__main__":
-    train(episodes=1)
+    train(episodes=10)

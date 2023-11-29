@@ -128,6 +128,15 @@ class Main:
 
         self.last_action_time = None
 
+    def simulate_step(self):
+        with self.vehicle_list_lock:
+            for vehicle in self.vehicle_list[:]:  # Work on a copy of the list
+                vehicle.move()
+                has_crossed, crossed_direction = vehicle.crossed_threshold()
+                if has_crossed:
+                    self.vehicle_parameters["processed_vehicles"][crossed_direction] += 1
+                    self.vehicle_list.remove(vehicle)
+
     @staticmethod
     def calculate_reward(old_dti, new_dti):
         # Reward for reducing the DTI in the most congested lane
@@ -208,15 +217,15 @@ class Main:
         # Reset any other necessary state variables here
         self.last_action_time = None
 
+        self.vehicle_parameters["processed_vehicles"] = {direction: 0 for direction in
+                                                         self.vehicle_parameters["incoming_direction"]}
+
     def save_model(self):
         # Ensure the directory for saving exists
         os.makedirs('saved_models', exist_ok=True)
         # Save the Q-table
         np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
         print("Model saved successfully.")
-
-    def get_test_total(self):
-        return self.test_total
 
     def run(self):
         # Set up the display
@@ -250,6 +259,7 @@ class Main:
 
         # Main loop
         running = True
+        episode_over = False
         try:
             while running:
                 for event in pygame.event.get():
@@ -290,8 +300,6 @@ class Main:
                     old_dti = new_dti
                     self.last_action_time = current_time
 
-                    print(old_dti)
-
                 # Draw the intersection, traffic lights, and crossing
                 intersection.draw()
                 traffic_lights.draw()
@@ -309,12 +317,16 @@ class Main:
                         has_crossed, crossed_direction = vehicle.crossed_threshold()
                         if has_crossed:
                             self.vehicle_parameters["vehicle_count"][crossed_direction] -= 1
-                            self.test_total[crossed_direction] += 1
 
                 self.display_data(self.vehicle_parameters["vehicle_count"],
                                   self.vehicle_parameters["processed_vehicles"])
 
                 pygame.display.flip()
+
+                if sum(self.vehicle_parameters["processed_vehicles"].values()) > 50:
+                    print("Episode complete")
+                    episode_over = True
+                    return episode_over
 
         except Exception as e:
             print(f"Error during main loop: {e}")

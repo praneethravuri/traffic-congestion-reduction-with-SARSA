@@ -108,7 +108,7 @@ class Vehicle:
 
         light_state_for_direction = current_traffic_light_colors.get(self.direction, "GREEN")
 
-        if light_state_for_direction in ["RED"]:
+        if light_state_for_direction in ["RED", "YELLOW"]:
             for other_vehicle in vehicle_list:
                 if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
                     distance = self.get_position() - other_vehicle.get_position()
@@ -167,23 +167,6 @@ class Vehicle:
             else:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
-
-        # # the vehicle has not moved, so start the timer
-        # if (self.x, self.y) == (prev_x, prev_y):
-        #     if self.start_stop_time is None:
-        #         self.start_stop_time = time.time()
-        #
-        # # the vehicle has moved, and we should stop the timer
-        # else:
-        #     if self.start_stop_time is not None:
-        #         stop_stop_time = time.time()
-        #         total_delay = stop_stop_time - self.start_stop_time
-        #         # print(f"Vehicle {self.id} from {self.direction} direction stopped for {total_delay} seconds")
-        #         if self.id not in self.dti_info[self.direction]:
-        #             self.dti_info[self.direction][self.id] = total_delay
-        #         else:
-        #             self.dti_info[self.direction][self.id] += total_delay
-        #         self.start_stop_time = None
 
         if (self.x, self.y) == (prev_x, prev_y):
             if self.id not in self.dti_info[self.direction]:
