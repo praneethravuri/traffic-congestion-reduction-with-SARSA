@@ -35,9 +35,11 @@ def train(episodes):
 
             # Calculate the new DTI
             new_dti = environment.calculate_dti()
+            print(f"new_dti: {new_dti}")
 
             # Calculate the reward
             reward = environment.calculate_reward(environment.old_dti, new_dti)
+            print(f"Reward: {reward}")
 
             # Update the SARSA agent
             new_state = environment.calculate_state()

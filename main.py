@@ -128,15 +128,6 @@ class Main:
 
         self.last_action_time = None
 
-    def simulate_step(self):
-        with self.vehicle_list_lock:
-            for vehicle in self.vehicle_list[:]:  # Work on a copy of the list
-                vehicle.move()
-                has_crossed, crossed_direction = vehicle.crossed_threshold()
-                if has_crossed:
-                    self.vehicle_parameters["processed_vehicles"][crossed_direction] += 1
-                    self.vehicle_list.remove(vehicle)
-
     @staticmethod
     def calculate_reward(old_dti, new_dti):
         # Reward for reducing the DTI in the most congested lane
@@ -149,6 +140,7 @@ class Main:
         directions = ["north", "east", "south", "west"]
         chosen_direction = directions[action]
         # Change the traffic light of the chosen direction to green
+        print(f"Applying action: {action}")
         traffic_lights.change_light(chosen_direction)
         self.last_action_time = pygame.time.get_ticks()
 
@@ -199,6 +191,7 @@ class Main:
         for direction in ["north", "east", "south", "west"]:
             total = sum(self.vehicle_parameters["dti_info"][direction].values())
             ans[direction] = total
+        print(f"DTI values: {ans}")
         return ans
 
     def reset_environment(self):
@@ -253,9 +246,9 @@ class Main:
         vehicle_gen_thread.start()
 
         # Initialize the current state and action
-        old_dti = self.calculate_dti()
-        current_state = self.calculate_state()  # Updated to call without arguments
-        current_action = self.sarsa_agent.choose_action(current_state)
+        # old_dti = self.calculate_dti()
+        # current_state = self.calculate_state()  # Updated to call without arguments
+        # current_action = self.sarsa_agent.choose_action(current_state)
 
         # Main loop
         running = True
@@ -269,36 +262,38 @@ class Main:
                 current_time = pygame.time.get_ticks()
                 current_traffic_light, current_light_state, current_traffic_light_colors = traffic_lights.update(
                     current_time)
-
                 # Check if it's time to choose a new action
-                if self.last_action_time is None or (current_time - self.last_action_time) >= 20000:
-                    # Get the current state
-                    current_state = self.calculate_state()
-
-                    # Choose an action based on the current state
-                    current_action = self.sarsa_agent.choose_action(current_state)
-
-                    # Apply the chosen action
-                    self.apply_action(current_action, traffic_lights)
-
-                    # Get the new DTI values after applying the action
-                    new_dti = self.calculate_dti()
-
-                    # Calculate the reward based on the old and new DTI values
-                    reward = self.calculate_reward(old_dti, new_dti)
-
-                    # Get the new state after the action has been applied
-                    new_state = self.calculate_state()
-
-                    # Choose the next action based on the new state
-                    next_action = self.sarsa_agent.choose_action(new_state)
-
-                    # Update the SARSA agent
-                    self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
-
-                    # Update the old DTI values and the last action time
-                    old_dti = new_dti
-                    self.last_action_time = current_time
+                # if self.last_action_time is None or (current_time - self.last_action_time) >= 20000:
+                #     print(f"Old DTI: {old_dti}")
+                #     # Get the current state
+                #     current_state = self.calculate_state()
+                #
+                #     # Choose an action based on the current state
+                #     current_action = self.sarsa_agent.choose_action(current_state)
+                #
+                #     # Apply the chosen action
+                #     self.apply_action(current_action, traffic_lights)
+                #
+                #     # Get the new DTI values after applying the action
+                #     new_dti = self.calculate_dti()
+                #     print(f"New dti: {new_dti}")
+                #
+                #     # Calculate the reward based on the old and new DTI values
+                #     reward = self.calculate_reward(old_dti, new_dti)
+                #     print(f"Reward: {reward}")
+                #
+                #     # Get the new state after the action has been applied
+                #     new_state = self.calculate_state()
+                #
+                #     # Choose the next action based on the new state
+                #     next_action = self.sarsa_agent.choose_action(new_state)
+                #
+                #     # Update the SARSA agent
+                #     self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
+                #
+                #     # Update the old DTI values and the last action time
+                #     old_dti = new_dti
+                #     self.last_action_time = current_time
 
                 # Draw the intersection, traffic lights, and crossing
                 intersection.draw()
@@ -321,9 +316,12 @@ class Main:
                 self.display_data(self.vehicle_parameters["vehicle_count"],
                                   self.vehicle_parameters["processed_vehicles"])
 
+                current_dti = self.calculate_dti()
+                print(f"Current DTI after step: {current_dti}")
+
                 pygame.display.flip()
 
-                if sum(self.vehicle_parameters["processed_vehicles"].values()) > 50:
+                if sum(self.vehicle_parameters["processed_vehicles"].values()) > 15:
                     print("Episode complete")
                     episode_over = True
                     return episode_over
