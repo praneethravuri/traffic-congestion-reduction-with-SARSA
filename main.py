@@ -9,6 +9,8 @@ from crossing import Crossing
 from traffic_lights import TrafficLights
 from vehicle import Vehicle
 from sarsa import SARSA
+import os
+import numpy as np
 
 
 class Main:
@@ -112,6 +114,12 @@ class Main:
 
         # font object
         self.font = pygame.font.SysFont(pygame.font.get_default_font(), 36)
+        self.current_light_state = "RED"
+        self.traffic_lights = TrafficLights(self.screen, self.starting_traffic_light, self.current_light_state,
+                                            self.traffic_light_parameters["directions"], self.colors["traffic_lights"],
+                                            self.traffic_light_width,
+                                            self.intersection_center, self.road_width, self.intersection_trl_width,
+                                            self.traffic_light_parameters["timings"])
 
         self.sarsa_agent = None
         self.initialize_sarsa()
@@ -181,6 +189,16 @@ class Main:
             total = sum(self.vehicle_parameters["dti_info"][direction].values())
             ans[direction] = total
         return ans
+
+    def reset_environment(self):
+        pass
+
+    def save_model(self):
+        # Ensure the directory for saving exists
+        os.makedirs('saved_models', exist_ok=True)
+        # Save the Q-table
+        np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
+        print("Model saved successfully.")
 
     def run(self):
         # Set up the display
