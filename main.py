@@ -108,6 +108,8 @@ class Main:
             }
         }
 
+        self.test_total = {"north": 0, "south": 0, "east": 0, "west": 0}
+
         # threading parameters
         self.vehicle_list = []
         self.vehicle_list_lock = threading.Lock()
@@ -213,6 +215,9 @@ class Main:
         np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
         print("Model saved successfully.")
 
+    def get_test_total(self):
+        return self.test_total
+
     def run(self):
         # Set up the display
         screen = pygame.display.set_mode((self.width, self.height))
@@ -304,9 +309,11 @@ class Main:
                         has_crossed, crossed_direction = vehicle.crossed_threshold()
                         if has_crossed:
                             self.vehicle_parameters["vehicle_count"][crossed_direction] -= 1
+                            self.test_total[crossed_direction] += 1
 
                 self.display_data(self.vehicle_parameters["vehicle_count"],
                                   self.vehicle_parameters["processed_vehicles"])
+
                 pygame.display.flip()
 
         except Exception as e:

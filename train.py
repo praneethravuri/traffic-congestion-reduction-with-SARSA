@@ -1,4 +1,7 @@
 from main import Main
+import pygame
+import time
+
 
 def train(episodes):
     environment = Main()
@@ -10,38 +13,34 @@ def train(episodes):
         current_state = environment.calculate_state()
         current_action = environment.sarsa_agent.choose_action(current_state)
 
-        # Initialize old_dti at the start of each episode
         environment.old_dti = environment.calculate_dti()
+
+        # Start the timer
+        start_time = time.time()
 
         done = False
         while not done:
-            # Apply the chosen action
-            environment.apply_action(current_action, environment.traffic_lights)
-
-            # Calculate the new DTI
-            new_dti = environment.calculate_dti()
-
-            # Calculate the reward
-            reward = environment.calculate_reward(environment.old_dti, new_dti)
-
-            # Update the SARSA agent
-            new_state = environment.calculate_state()
-            next_action = environment.sarsa_agent.choose_action(new_state)
-            environment.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
-
-            # Update variables for the next iteration
-            total_reward += reward
-            environment.old_dti = new_dti
-            current_state = new_state
-            current_action = next_action
-
-            # Check for the end of the episode
-            if sum(environment.vehicle_parameters["processed_vehicles"].values()) > 1500:
+            # Check for elapsed time
+            current_time = time.time()
+            if current_time - start_time >= 60:  # 60 seconds for 1 minute
                 done = True
 
+            # Other training code here...
+            # Handle Pygame events, apply actions, simulate steps, etc.
+
+            # Print the episode number and update the display
+            print(f"Episode number: {episode}")
+            environment.run()
+
+            # Limit the frame rate for visibility
+            pygame.time.delay(100)
+
+        # End of episode
         print(f"Episode {episode + 1}: Total Reward: {total_reward}")
 
+    # Save the model after all episodes
     environment.save_model()
 
+
 if __name__ == "__main__":
-    train(episodes=100)
+    train(episodes=1)
