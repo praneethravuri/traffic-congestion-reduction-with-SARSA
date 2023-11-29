@@ -191,7 +191,20 @@ class Main:
         return ans
 
     def reset_environment(self):
-        pass
+        # Reset or initialize the environment to start a new episode
+        self.vehicle_parameters["dti_info"] = {"north": {}, "south": {}, "east": {}, "west": {}}
+        self.vehicle_parameters["vehicle_count"] = {"north": 0, "south": 0, "east": 0, "west": 0}
+        self.vehicle_parameters["processed_vehicles"] = {"north": 0, "south": 0, "east": 0, "west": 0}
+
+        # Assuming TrafficLights has a reset method
+        self.traffic_lights.reset()
+
+        # Clear vehicle list if applicable
+        with self.vehicle_list_lock:
+            self.vehicle_list.clear()
+
+        # Reset any other necessary state variables here
+        self.last_action_time = None
 
     def save_model(self):
         # Ensure the directory for saving exists
