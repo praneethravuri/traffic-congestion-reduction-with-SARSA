@@ -16,7 +16,6 @@ class SARSA:
             action = np.random.choice(self.number_of_actions)
         else:
             action = np.argmax(self.q_table[state, :])
-
         return action
 
     def learn(self, state, action, reward, next_state, next_action):

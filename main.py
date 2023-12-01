@@ -58,7 +58,11 @@ class Main:
             "radius": 12,
             "width": 12,
             "gap": 12,
+<<<<<<< Updated upstream
             "speed": 0.25,
+=======
+            "speed": 1,
+>>>>>>> Stashed changes
             "incoming_direction": ["north", "east", "south", "west"],
             "vehicle_count": {"north": 0, "south": 0, "east": 0, "west": 0},
             "processed_vehicles": {"north": 0, "south": 0, "east": 0, "west": 0},
@@ -110,11 +114,69 @@ class Main:
         self.vehicle_list = []
         self.vehicle_list_lock = threading.Lock()
 
+        # Epsilon Decay Parameters
+        self.initial_epsilon = 0.9  # Starting value of epsilon
+        self.epsilon_decay = 0.9995  # Decay factor for each step
+        self.min_epsilon = 0.1  # Minimum value of epsilon
+
         # font object
         self.font = pygame.font.SysFont(pygame.font.get_default_font(), 36)
+<<<<<<< Updated upstream
+=======
+        self.current_light_state = "RED"
+        self.traffic_lights = TrafficLights(self.screen, self.starting_traffic_light, self.current_light_state,
+                                            self.traffic_light_parameters["directions"], self.colors["traffic_lights"],
+                                            self.traffic_light_width,
+                                            self.intersection_center, self.road_width, self.intersection_trl_width,
+                                            self.traffic_light_parameters["timings"])
+
+        self.sarsa_agent = None
+        self.initialize_sarsa()
+
+        self.last_action_time = None
+
+    @staticmethod
+    def calculate_reward(old_dti, new_dti):
+        # Calculate the total reduction in DTI across all lanes
+        dti_reduction = sum(old_dti.values()) - sum(new_dti.values())
+
+        # If the DTI hasn't increased, provide a small positive reward
+        if dti_reduction >= 0:
+            reward = dti_reduction / 1000 + 1  # The +1 ensures a positive reward for maintaining low/zero DTI
+        else:
+            reward = dti_reduction / 1000  # Negative reward for increased DTI
+
+        return reward
+
+    def apply_action(self, action, traffic_lights):
+        directions = ["north", "east", "south", "west"]
+        chosen_direction = directions[action]
+        traffic_lights.change_light(chosen_direction)
+        self.last_action_time = pygame.time.get_ticks()
+
+    def calculate_state(self):
+        dti_values = self.calculate_dti()
+        # Sort directions based on DTI values
+        sorted_directions = sorted(dti_values, key=dti_values.get, reverse=True)
+        # Encode the sorted directions into state
+        state = [str(sorted_directions.index(direction)) for direction in ["north", "east", "south", "west"]]
+        # Convert to integer state
+        return int(''.join(state))
+
+    def initialize_sarsa(self):
+        # Define the number of states and actions
+        # States - 3 traffic lights, 5 vehicles states, 4 lanes = (3 * 5) ** 4
+        number_of_states = 15 ** 4
+        # 4 actions
+        number_of_actions = 4
+        self.sarsa_agent = SARSA(alpha=0.1, gamma=0.9, epsilon=self.initial_epsilon,
+                                 number_of_states=number_of_states,
+                                 number_of_actions=number_of_actions)
+>>>>>>> Stashed changes
 
     def vehicle_generator(self, stop_event, vehicle_list_lock):
         while not stop_event.is_set():
+            time.sleep(random.uniform(0.1, 0.5))
             vehicle = Vehicle(self.screen, self.vehicle_parameters["radius"], self.vehicle_parameters["width"],
                               self.vehicle_parameters["speed"],
                               self.vehicle_parameters["processed_vehicles"], self.vehicle_parameters["dti_info"])
@@ -122,7 +184,6 @@ class Main:
                                      self.colors["vehicle_direction"], self.vehicle_parameters["vehicle_count"])
             with vehicle_list_lock:
                 self.vehicle_list.append(vehicle)
-            time.sleep(0.5)
 
     def display_data(self, vehicle_count, processed_vehicles):
         x, y = 20, 20
@@ -140,6 +201,7 @@ class Main:
 
     def calculate_dti(self):
         ans = {}
+<<<<<<< Updated upstream
         for main_key in self.vehicle_parameters["dti_info"].keys():
             total = 0
             for k, v in self.vehicle_parameters["dti_info"][main_key].items():
@@ -151,9 +213,35 @@ class Main:
     def run(self):
 
         # Set up the display
+=======
+        for direction in ["north", "east", "south", "west"]:
+            total = sum(self.vehicle_parameters["dti_info"][direction].values())
+            ans[direction] = total
+        return ans
+
+    def reset_environment(self):
+        self.vehicle_parameters["dti_info"] = {"north": {}, "south": {}, "east": {}, "west": {}}
+        self.vehicle_parameters["vehicle_count"] = {"north": 0, "south": 0, "east": 0, "west": 0}
+        self.vehicle_parameters["processed_vehicles"] = {"north": 0, "south": 0, "east": 0, "west": 0}
+        self.traffic_lights.reset()
+        with self.vehicle_list_lock:
+            self.vehicle_list.clear()
+        self.last_action_time = None
+        self.vehicle_parameters["processed_vehicles"] = {direction: 0 for direction in
+                                                         self.vehicle_parameters["incoming_direction"]}
+
+    def save_model(self):
+        # Ensure the directory for saving exists
+        os.makedirs('saved_models', exist_ok=True)
+        # Save the Q-table
+        np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
+        print("Model saved successfully.")
+
+    def run(self):
+
+>>>>>>> Stashed changes
         screen = pygame.display.set_mode((self.width, self.height))
 
-        # Create Intersection, Crossing, and Traffic Lights
         intersection = Intersection(screen, self.intersection_center, self.road_width, self.colors["intersection"],
                                     self.width, self.height, self.font)
         crossing = Crossing(screen, self.intersection_center, self.road_width, self.intersection_trl_width,
@@ -165,11 +253,9 @@ class Main:
                                        self.intersection_center, self.road_width, self.intersection_trl_width,
                                        self.traffic_light_parameters["timings"])
 
-        # Vehicle management
         vehicle_list_lock = threading.Lock()
         stop_event = threading.Event()
 
-        # Start the vehicle generator thread
         vehicle_gen_thread = threading.Thread(target=self.vehicle_generator,
                                               args=(stop_event, vehicle_list_lock))
         try:
@@ -178,6 +264,7 @@ class Main:
             print(f"Error starting thread: {e}")
 
         # Main loop
+        old_dti = {"north": 0, "south": 0, "east": 0, "west": 0}
         running = True
         try:
             while running:
@@ -188,7 +275,24 @@ class Main:
                 current_time = pygame.time.get_ticks()
                 current_traffic_light, current_light_state = traffic_lights.update(current_time)
 
-                # Draw the intersection, traffic lights, and crossing
+                if self.sarsa_agent.epsilon > self.min_epsilon:
+                    self.sarsa_agent.epsilon *= self.epsilon_decay
+
+                if self.last_action_time is None or (current_time - self.last_action_time) >= 7500:
+                    print(f"Old dti: {old_dti}")
+                    current_state = self.calculate_state()
+                    current_action = self.sarsa_agent.choose_action(current_state)
+                    self.apply_action(current_action, traffic_lights)
+                    new_dti = self.calculate_dti()
+                    print(f"New dti: {new_dti}")
+                    reward = self.calculate_reward(old_dti, new_dti)
+                    print(f"Reward: {reward}")
+                    new_state = self.calculate_state()
+                    next_action = self.sarsa_agent.choose_action(new_state)
+                    self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
+                    self.last_action_time = current_time
+                    old_dti = new_dti
+
                 intersection.draw()
                 traffic_lights.draw()
                 crossing.draw()
@@ -208,15 +312,19 @@ class Main:
 
                 self.display_data(self.vehicle_parameters["vehicle_count"],
                                   self.vehicle_parameters["processed_vehicles"])
+<<<<<<< Updated upstream
                 # print(self.vehicle_parameters["dti_info"])
                 print(self.calculate_dti())
                 pygame.display.flip()
+=======
+
+                pygame.display.flip()
+
+>>>>>>> Stashed changes
         except Exception as e:
             print(f"Error during main loop: {e}", end='\r')
             traceback.print_exc()
             sys.exit(1)
-
-        # Clean up and exit
         stop_event.set()
         vehicle_gen_thread.join()
         try:
