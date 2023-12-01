@@ -53,7 +53,7 @@ def train(episodes):
             current_action = next_action
 
             # Update the display
-            episode_over = environment.run()
+            episode_over = environment.simulate()
 
             if episode_over:
                 print(f"Episode {episode + 1} completed.")

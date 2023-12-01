@@ -1,7 +1,6 @@
 import pygame
 import random
 import uuid
-import time
 
 
 class Vehicle:
@@ -13,6 +12,7 @@ class Vehicle:
         self.processed_vehicles = processed_vehicles
         self.start_stop_time = None
         self.dti_info = dti_info
+        self.can_move = None
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -90,9 +90,6 @@ class Vehicle:
             else:
                 self.change_speed('y', False)
 
-<<<<<<< Updated upstream
-    def move(self, current_traffic_light, current_light_state, thresholds, vehicle_turning_points):
-=======
     def get_position(self):
         if self.direction in ["north", "south"]:
             return self.y
@@ -111,7 +108,7 @@ class Vehicle:
 
         light_state_for_direction = current_traffic_light_colors.get(self.direction, "GREEN")
 
-        if light_state_for_direction in ["RED"]:
+        if light_state_for_direction in ["RED", "YELLOW"]:
             for other_vehicle in vehicle_list:
                 if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
                     distance = self.get_position() - other_vehicle.get_position()
@@ -125,10 +122,7 @@ class Vehicle:
         if not self.can_move:
             return
 
->>>>>>> Stashed changes
         prev_x, prev_y = self.x, self.y
-        # taking the threshold of the vehicles depending on its outgoing direction and lane
-        self.threshold = thresholds[self.direction]
 
         # taking the turning points of the vehicles depending on its outgoing direction
         if self.out_going_direction == "left":
@@ -174,31 +168,11 @@ class Vehicle:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
 
-<<<<<<< Updated upstream
-        # the vehicle has not moved, so start the timer
         if (self.x, self.y) == (prev_x, prev_y):
-            if self.start_stop_time is None:
-                self.start_stop_time = time.time()
-
-        # the vehicle has moved and we should stop the timer
-        else:
-            if self.start_stop_time is not None:
-                stop_stop_time = time.time()
-                total_delay = stop_stop_time - self.start_stop_time
-                # print(f"Vehicle {self.id} from {self.direction} direction stopped for {total_delay} seconds")
-                if self.id not in self.dti_info[self.direction]:
-                    self.dti_info[self.direction][self.id] = total_delay
-                else:
-                    self.dti_info[self.direction][self.id] += total_delay
-                self.start_stop_time = None
-=======
-        if current_light_state in ["RED", "YELLOW"]:
-            if (self.x, self.y) == (prev_x, prev_y):
-                if self.id not in self.dti_info[self.direction]:
-                    self.dti_info[self.direction][self.id] = 1  # Initialize if not present
-                else:
-                    self.dti_info[self.direction][self.id] += 1  # Increment if already present
->>>>>>> Stashed changes
+            if self.id not in self.dti_info[self.direction]:
+                self.dti_info[self.direction][self.id] = 1  # Initialize if not present
+            else:
+                self.dti_info[self.direction][self.id] += 1  # Increment if already present
 
         return self.x, self.y
 
@@ -226,8 +200,8 @@ class Vehicle:
                 self.has_crossed_threshold = True
                 self.processed_vehicles[self.direction] += 1
                 # delete the delay of a vehicle if it has crossed the threshold
-                # if self.id in self.dti_info[self.direction]:
-                #     del self.dti_info[self.direction][self.id]
+                if self.id in self.dti_info[self.direction]:
+                    del self.dti_info[self.direction][self.id]
                 return True, self.direction
 
         return False, None
