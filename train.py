@@ -16,7 +16,7 @@ def train(episodes):
         environment.old_dti = environment.calculate_dti()
         done = True
         while done:
-            print(f"Episode number: {episode+1}")
+            print(f"Episode number: {episode + 1}")
 
             # Handle Pygame events
             for event in pygame.event.get():

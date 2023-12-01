@@ -108,21 +108,25 @@ class Vehicle:
 
         light_state_for_direction = current_traffic_light_colors.get(self.direction, "GREEN")
 
-        if light_state_for_direction in ["RED", "YELLOW"]:
-            for other_vehicle in vehicle_list:
-                if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
-                    distance = self.get_position() - other_vehicle.get_position()
-                    if self.direction in ["west", "north"] and distance < 0 and abs(distance) < self.radius * 3:
-                        self.can_move = False
-                        break
-                    elif self.direction in ["east", "south"] and distance > 0 and abs(distance) < self.radius * 3:
-                        self.can_move = False
-                        break
+        if not self.has_crossed_threshold:
+            if light_state_for_direction in ["RED", "YELLOW"]:
+                for other_vehicle in vehicle_list:
+                    if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
+                        distance = self.get_position() - other_vehicle.get_position()
+                        if self.direction in ["west", "north"] and distance < 0 and abs(distance) < self.radius * 3:
+                            self.can_move = False
+                            break
+                        elif self.direction in ["east", "south"] and distance > 0 and abs(distance) < self.radius * 3:
+                            self.can_move = False
+                            break
 
         if not self.can_move:
+            # Update DTI for waiting vehicles
+            if self.id not in self.dti_info[self.direction]:
+                self.dti_info[self.direction][self.id] = 1
+            else:
+                self.dti_info[self.direction][self.id] += 1
             return
-
-        prev_x, prev_y = self.x, self.y
 
         # taking the turning points of the vehicles depending on its outgoing direction
         if self.out_going_direction == "left":
@@ -167,12 +171,6 @@ class Vehicle:
             else:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
-
-        if (self.x, self.y) == (prev_x, prev_y):
-            if self.id not in self.dti_info[self.direction]:
-                self.dti_info[self.direction][self.id] = 1  # Initialize if not present
-            else:
-                self.dti_info[self.direction][self.id] += 1  # Increment if already present
 
         return self.x, self.y
 

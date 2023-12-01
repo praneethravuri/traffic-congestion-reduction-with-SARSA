@@ -13,6 +13,7 @@ import os
 import numpy as np
 
 
+
 class Main:
     def __init__(self):
 
@@ -71,8 +72,8 @@ class Main:
         self.traffic_light_parameters = {
             "directions": ["north", "east", "south", "west"],
             "timings": {
-                "RED": 5,
-                "GREEN": 5,
+                "RED": 10,
+                "GREEN": 10,
                 "YELLOW": 2
             }
         }
@@ -140,9 +141,9 @@ class Main:
 
         # If the DTI hasn't increased, provide a small positive reward
         if dti_reduction >= 0:
-            reward = dti_reduction / 1000 + 1  # The +1 ensures a positive reward for maintaining low/zero DTI
+            reward = dti_reduction + 1  # The +1 ensures a positive reward for maintaining low/zero DTI
         else:
-            reward = dti_reduction / 1000  # Negative reward for increased DTI
+            reward = dti_reduction  # Negative reward for increased DTI
 
         return reward
 
@@ -272,7 +273,7 @@ class Main:
                 if self.sarsa_agent.epsilon > self.min_epsilon:
                     self.sarsa_agent.epsilon *= self.epsilon_decay
 
-                if self.last_action_time is None or (current_time - self.last_action_time) >= 7500:
+                if self.last_action_time is None or (current_time - self.last_action_time) >= 5000:
                     print(f"Old dti: {old_dti}")
                     current_state = self.calculate_state()
                     current_action = self.sarsa_agent.choose_action(current_state)
