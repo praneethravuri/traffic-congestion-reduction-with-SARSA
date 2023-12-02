@@ -13,6 +13,7 @@ class Vehicle:
         self.start_stop_time = None
         self.dti_info = dti_info
         self.can_move = None
+        self.stop_time = None
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
@@ -121,12 +122,19 @@ class Vehicle:
                             break
 
         if not self.can_move:
+
+            if self.stop_time is None:
+                self.stop_time = pygame.time.get_ticks()
             # Update DTI for waiting vehicles
-            if self.id not in self.dti_info[self.direction]:
-                self.dti_info[self.direction][self.id] = 1
-            else:
-                self.dti_info[self.direction][self.id] += 1
+            if pygame.time.get_ticks() - self.stop_time >= 1000:
+                if self.id not in self.dti_info[self.direction]:
+                    self.dti_info[self.direction][self.id] = 1
+                else:
+                    self.dti_info[self.direction][self.id] += 1
+                self.stop_time = pygame.time.get_ticks()
             return
+        else:
+            self.stop_time = None
 
         # taking the turning points of the vehicles depending on its outgoing direction
         if self.out_going_direction == "left":
