@@ -13,7 +13,6 @@ import os
 import numpy as np
 
 
-
 class Main:
     def __init__(self):
 
@@ -258,7 +257,7 @@ class Main:
             print(f"Error starting thread: {e}")
 
         # Main loop
-        old_dti = {"north": 0, "south": 0, "east": 0, "west": 0}
+        old_dti = self.calculate_dti()
         running = True
         try:
             while running:
@@ -273,7 +272,7 @@ class Main:
                 if self.sarsa_agent.epsilon > self.min_epsilon:
                     self.sarsa_agent.epsilon *= self.epsilon_decay
 
-                if self.last_action_time is None or (current_time - self.last_action_time) >= 5000:
+                if self.last_action_time is None or (current_time - self.last_action_time) >= 1000:
                     print(f"Old dti: {old_dti}")
                     current_state = self.calculate_state()
                     current_action = self.sarsa_agent.choose_action(current_state)
