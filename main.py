@@ -11,6 +11,7 @@ from vehicle import Vehicle
 from sarsa import SARSA
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Main:
@@ -134,17 +135,57 @@ class Main:
         self.last_action_time = None
 
         self.total_reward = 0
+        self.reward_list = []
+
+    def plot_average_rewards(self):
+        window_size = 50
+        average_rewards = [np.mean(self.reward_list[i:i + window_size]) for i in range(0, len(self.reward_list), window_size)]
+        plt.figure()
+        plt.plot(average_rewards)
+        plt.xlabel('Time (in windows of {} steps)'.format(window_size))
+        plt.ylabel('Average Reward')
+        plt.title('Average Reward Over Time')
+        os.makedirs('plots', exist_ok=True)
+        plt.savefig('plots/average_rewards_plot.png')
+        plt.close()
 
     @staticmethod
     def calculate_reward(old_dti, new_dti):
-        # Calculate the total reduction in DTI across all lanes
-        dti_reduction = sum(old_dti.values()) - sum(new_dti.values())
+        # # Calculate the total reduction in DTI across all lanes
+        # dti_reduction = sum(old_dti.values()) - sum(new_dti.values())
+        #
+        # # If the DTI hasn't increased, provide a small positive reward
+        # if dti_reduction >= 0:
+        #     reward = dti_reduction + 1  # The +1 ensures a positive reward for maintaining low/zero DTI
+        # else:
+        #     reward = dti_reduction  # Negative reward for increased DTI
+        #
+        # return reward
+        max_reward = 10
+        max_penalty = -10
 
-        # If the DTI hasn't increased, provide a small positive reward
-        if dti_reduction >= 0:
-            reward = dti_reduction + 1  # The +1 ensures a positive reward for maintaining low/zero DTI
+        delay_before = sum(old_dti.values())
+        delay_after = sum(new_dti.values())
+
+        if delay_before == 0:
+            if delay_after > 0:
+                # Introducing delay where there was none should be penalized
+                return max_penalty
+            else:
+                # Maintaining no congestion could be a neutral or slightly positive outcome
+                return 1  # or some small positive value
         else:
-            reward = dti_reduction  # Negative reward for increased DTI
+            improvement = delay_before - delay_after
+            if improvement > 0:
+                # Scale the reward based on the percentage improvement
+                reward = (improvement / delay_before) * max_reward
+            elif improvement < 0:
+                # Scale the penalty based on the percentage worsening
+                penalty_ratio = abs(improvement) / delay_before
+                reward = penalty_ratio * max_penalty
+            else:
+                # No change in delay
+                reward = 0
 
         return reward
 
@@ -287,6 +328,8 @@ class Main:
                     self.apply_action(current_action, traffic_lights)
                     new_dti = self.calculate_dti()
                     reward = self.calculate_reward(old_dti, new_dti)
+                    print(f"Reward: {reward}")
+                    self.reward_list.append(reward)
                     self.total_reward += reward
                     new_state = self.calculate_state()
                     next_action = self.sarsa_agent.choose_action(new_state)
@@ -316,20 +359,25 @@ class Main:
 
                 pygame.display.flip()
 
-                if sum(self.vehicle_parameters["processed_vehicles"].values()) > 1000:
-                    return self.total_reward
+                if sum(self.vehicle_parameters["processed_vehicles"].values()) > 100000:
+                    running = False
 
         except Exception as e:
             print(f"Error during main loop: {e}", end='\r')
             traceback.print_exc()
-            sys.exit(1)
-        stop_event.set()
-        vehicle_gen_thread.join()
+
+        finally:
+            stop_event.set()
+            vehicle_gen_thread.join()
+            self.plot_average_rewards()
+
         try:
             pygame.quit()
             sys.exit()
         except pygame.error as e:
             print(f"Error quitting Pygame: {e}")
+
+        sys.exit()
 
 
 if __name__ == "__main__":
