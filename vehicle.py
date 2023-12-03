@@ -117,13 +117,13 @@ class Vehicle:
         # if the traffic light is green, the vehicle is free to move
         # if the traffic light is either red or yellow, the car is free to move upto the threshold of that direction
         go_condition = current_traffic_light == self.direction and current_light_state == "GREEN"
-        stopping_thresholds = {
+        limiting_thresholds = {
             "west": self.x > self.threshold,
             "east": self.x < self.threshold,
             "south": self.y < self.threshold,
             "north": self.y > self.threshold
         }
-        keep_moving_condition = current_light_state in ["YELLOW", "RED"] and stopping_thresholds[self.direction]
+        keep_moving_condition = current_light_state in ["YELLOW", "RED"] and limiting_thresholds[self.direction]
 
         light_state_for_direction = current_traffic_light_colors.get(self.direction, "GREEN")
 
@@ -149,35 +149,56 @@ class Vehicle:
         else:
             self.stop_time = None
 
-        # For vehicle coming from the west
         if self.direction == "west":
-            if go_condition or keep_moving_condition:
+            if go_condition or (self.has_crossed_threshold and not keep_moving_condition):
                 self.handle_turn(self.out_going_direction, current_turning_point)
-            else:
+            elif not self.has_crossed_threshold:
                 if self.x < self.threshold:
                     self.change_speed('x', True)
 
         # For vehicle coming from the east
+        # elif self.direction == "east":
+        #     if go_condition or keep_moving_condition:
+        #         self.handle_turn(self.out_going_direction, current_turning_point)
+        #     else:
+        #         if self.x > self.threshold:
+        #             self.change_speed('x', False)
+
         elif self.direction == "east":
-            if go_condition or keep_moving_condition:
+            if go_condition or (self.has_crossed_threshold and not keep_moving_condition):
                 self.handle_turn(self.out_going_direction, current_turning_point)
-            else:
+            elif not self.has_crossed_threshold:
                 if self.x > self.threshold:
                     self.change_speed('x', False)
 
-        # For vehicle coming from the north
+
+        # # For vehicle coming from the north
+        # elif self.direction == "north":
+        #     if go_condition or keep_moving_condition:
+        #         self.handle_turn(self.out_going_direction, current_turning_point)
+        #     else:
+        #         if self.y < self.threshold:
+        #             self.change_speed('y', True)
+        #
+        # # For vehicle coming from the south
+        # elif self.direction == "south":
+        #     if go_condition or keep_moving_condition:
+        #         self.handle_turn(self.out_going_direction, current_turning_point)
+        #     else:
+        #         if self.y > self.threshold:
+        #             self.change_speed('y', False)
+
         elif self.direction == "north":
-            if go_condition or keep_moving_condition:
+            if go_condition or (self.has_crossed_threshold and not keep_moving_condition):
                 self.handle_turn(self.out_going_direction, current_turning_point)
-            else:
+            elif not self.has_crossed_threshold:
                 if self.y < self.threshold:
                     self.change_speed('y', True)
 
-        # For vehicle coming from the south
         elif self.direction == "south":
-            if go_condition or keep_moving_condition:
+            if go_condition or (self.has_crossed_threshold and not keep_moving_condition):
                 self.handle_turn(self.out_going_direction, current_turning_point)
-            else:
+            elif not self.has_crossed_threshold:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
 
