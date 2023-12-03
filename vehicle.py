@@ -100,54 +100,58 @@ class Vehicle:
     def move(self, vehicle_list, current_traffic_light, current_light_state, thresholds, vehicle_turning_points,
              current_traffic_light_colors):
 
-        # taking the threshold of the vehicles depending on its outgoing direction and lane
+        # defining a value for a vehicle to move
         self.can_move = True
+
+        # taking the threshold of the vehicles depending on its outgoing direction and lane
         self.threshold = thresholds.get(self.direction)
-        if self.threshold is None:
-            print(f"Threshold not set for direction {self.direction}")
-            return
+
+        # defining the turning points for a vehicle
+        # if the vehicle is going straight, there is no turning point
+        if self.out_going_direction in ["left", "right"]:
+            current_turning_point = vehicle_turning_points[self.out_going_direction].get(self.direction)
+        else:
+            current_turning_point = None
+
+        # defining the stop and go conditions for a vehicle to move
+        # if the traffic light is green, the vehicle is free to move
+        # if the traffic light is either red or yellow, the car is free to move upto the threshold of that direction
+        go_condition = current_traffic_light == self.direction and current_light_state == "GREEN"
+        stopping_thresholds = {
+            "west": self.x > self.threshold,
+            "east": self.x < self.threshold,
+            "south": self.y < self.threshold,
+            "north": self.y > self.threshold
+        }
+        keep_moving_condition = current_light_state in ["YELLOW", "RED"] and stopping_thresholds[self.direction]
 
         light_state_for_direction = current_traffic_light_colors.get(self.direction, "GREEN")
 
-        if not self.has_crossed_threshold:
-            if light_state_for_direction in ["RED", "YELLOW"]:
-                for other_vehicle in vehicle_list:
-                    if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
-                        distance = self.get_position() - other_vehicle.get_position()
-                        if self.direction in ["west", "north"] and distance < 0 and abs(distance) < self.radius * 3:
-                            self.can_move = False
-                            break
-                        elif self.direction in ["east", "south"] and distance > 0 and abs(distance) < self.radius * 3:
-                            self.can_move = False
-                            break
+        if light_state_for_direction in ["RED"]:
+            for other_vehicle in vehicle_list:
+                if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
+                    distance = self.get_position() - other_vehicle.get_position()
+                    if self.direction in ["west", "north"] and distance < 0 and abs(distance) < self.radius * 3:
+                        self.can_move = False
+                        break
+                    elif self.direction in ["east", "south"] and distance > 0 and abs(distance) < self.radius * 3:
+                        self.can_move = False
+                        break
 
         if not self.can_move:
-
             if self.stop_time is None:
                 self.stop_time = pygame.time.get_ticks()
-            # Update DTI for waiting vehicles
             if pygame.time.get_ticks() - self.stop_time >= 1000:
-                if self.id not in self.dti_info[self.direction]:
-                    self.dti_info[self.direction][self.id] = 1
-                else:
-                    self.dti_info[self.direction][self.id] += 1
+                self.dti_info[self.direction].setdefault(self.id, 0)
+                self.dti_info[self.direction][self.id] += 1
                 self.stop_time = pygame.time.get_ticks()
             return
         else:
             self.stop_time = None
 
-        # taking the turning points of the vehicles depending on its outgoing direction
-        if self.out_going_direction == "left":
-            current_turning_point = vehicle_turning_points["left"][self.direction]
-        elif self.out_going_direction == "right":
-            current_turning_point = vehicle_turning_points["right"][self.direction]
-        else:
-            current_turning_point = None
-
         # For vehicle coming from the west
         if self.direction == "west":
-            if (current_traffic_light == "west" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.x > self.threshold):
+            if go_condition or keep_moving_condition:
                 self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.x < self.threshold:
@@ -155,8 +159,7 @@ class Vehicle:
 
         # For vehicle coming from the east
         elif self.direction == "east":
-            if (current_traffic_light == "east" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.x < self.threshold):
+            if go_condition or keep_moving_condition:
                 self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.x > self.threshold:
@@ -164,8 +167,7 @@ class Vehicle:
 
         # For vehicle coming from the north
         elif self.direction == "north":
-            if (current_traffic_light == "north" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.y > self.threshold):
+            if go_condition or keep_moving_condition:
                 self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.y < self.threshold:
@@ -173,8 +175,7 @@ class Vehicle:
 
         # For vehicle coming from the south
         elif self.direction == "south":
-            if (current_traffic_light == "south" and current_light_state == 'GREEN') or (
-                    current_light_state in ["YELLOW", "RED"] and self.y < self.threshold):
+            if go_condition or keep_moving_condition:
                 self.handle_turn(self.out_going_direction, current_turning_point)
             else:
                 if self.y > self.threshold:

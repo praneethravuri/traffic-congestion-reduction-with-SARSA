@@ -133,6 +133,8 @@ class Main:
 
         self.last_action_time = None
 
+        self.total_reward = 0
+
     @staticmethod
     def calculate_reward(old_dti, new_dti):
         # Calculate the total reduction in DTI across all lanes
@@ -207,22 +209,29 @@ class Main:
 
         return ans
 
-    def run(self):
-        ans = {"north": 0, "south": 0, "east": 0, "west": 0}
-        for direction in ["north", "east", "south", "west"]:
-            total = sum(self.vehicle_parameters["dti_info"][direction].values())
-            ans[direction] = total
-        return ans
-
     def reset_environment(self):
-        self.vehicle_parameters["dti_info"] = {"north": {}, "south": {}, "east": {}, "west": {}}
-        self.vehicle_parameters["vehicle_count"] = {"north": 0, "south": 0, "east": 0, "west": 0}
-        self.vehicle_parameters["processed_vehicles"] = {"north": 0, "south": 0, "east": 0, "west": 0}
+        self.current_light_state = "RED"
+        self.starting_traffic_light = random.choice(self.traffic_light_parameters["directions"])
+        self.traffic_lights = TrafficLights(self.screen, self.starting_traffic_light, self.current_light_state,
+                                            self.traffic_light_parameters["directions"], self.colors["traffic_lights"],
+                                            self.traffic_light_width,
+                                            self.intersection_center, self.road_width, self.intersection_trl_width,
+                                            self.traffic_light_parameters["timings"])
+
+        # Clear all vehicles and reset related parameters
         with self.vehicle_list_lock:
             self.vehicle_list.clear()
+        self.vehicle_parameters["vehicle_count"] = {"north": 0, "south": 0, "east": 0, "west": 0}
+        self.vehicle_parameters["processed_vehicles"] = {"north": 0, "south": 0, "east": 0, "west": 0}
+        self.vehicle_parameters["dti_info"] = {"north": {}, "south": {}, "east": {}, "west": {}}
+
+        # Reset timers and counters
         self.last_action_time = None
-        self.vehicle_parameters["processed_vehicles"] = {direction: 0 for direction in
-                                                         self.vehicle_parameters["incoming_direction"]}
+
+        # Reset reward and other metrics
+        self.total_reward = 0
+
+        self.initial_epsilon = 0.9
 
     def save_model(self):
         # Ensure the directory for saving exists
@@ -231,7 +240,7 @@ class Main:
         np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
         print("Model saved successfully.")
 
-    def simulate(self):
+    def run(self):
 
         screen = pygame.display.set_mode((self.width, self.height))
 
@@ -273,14 +282,12 @@ class Main:
                     self.sarsa_agent.epsilon *= self.epsilon_decay
 
                 if self.last_action_time is None or (current_time - self.last_action_time) >= 1000:
-                    print(f"Old dti: {old_dti}")
                     current_state = self.calculate_state()
                     current_action = self.sarsa_agent.choose_action(current_state)
                     self.apply_action(current_action, traffic_lights)
                     new_dti = self.calculate_dti()
-                    print(f"New dti: {new_dti}")
                     reward = self.calculate_reward(old_dti, new_dti)
-                    print(f"Reward: {reward}")
+                    self.total_reward += reward
                     new_state = self.calculate_state()
                     next_action = self.sarsa_agent.choose_action(new_state)
                     self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
@@ -309,6 +316,9 @@ class Main:
 
                 pygame.display.flip()
 
+                if sum(self.vehicle_parameters["processed_vehicles"].values()) > 1000:
+                    return self.total_reward
+
         except Exception as e:
             print(f"Error during main loop: {e}", end='\r')
             traceback.print_exc()
@@ -324,4 +334,4 @@ class Main:
 
 if __name__ == "__main__":
     main = Main()
-    main.simulate()
+    main.run()

@@ -21,3 +21,7 @@ class SARSA:
         predict = self.q_table[state, action]
         target = reward + self.gamma * self.q_table[next_state, next_action]
         self.q_table[state, action] += self.alpha * (target - predict)
+
+    def reset(self):
+        self.q_table = np.zeros((self.number_of_states, self.number_of_actions))
+
