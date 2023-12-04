@@ -277,7 +277,7 @@ class Main:
         np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
         print("Model saved successfully.")
 
-    def run(self, generation=None):
+    def run(self, generation=None, training=False):
 
         screen = pygame.display.set_mode((self.width, self.height))
 
@@ -357,8 +357,9 @@ class Main:
 
                 pygame.display.flip()
 
-                if sum(self.vehicle_parameters["processed_vehicles"].values()) > 100000:
-                    running = False
+                if training:
+                    if sum(self.vehicle_parameters["processed_vehicles"].values()) > 10:
+                        return self.total_reward
 
         except Exception as e:
             print(f"Error during main loop: {e}", end='\r')
