@@ -139,7 +139,8 @@ class Main:
 
     def plot_average_rewards(self):
         window_size = 50
-        average_rewards = [np.mean(self.reward_list[i:i + window_size]) for i in range(0, len(self.reward_list), window_size)]
+        average_rewards = [np.mean(self.reward_list[i:i + window_size]) for i in
+                           range(0, len(self.reward_list), window_size)]
         plt.figure()
         plt.plot(average_rewards)
         plt.xlabel('Time (in windows of {} steps)'.format(window_size))
@@ -215,19 +216,24 @@ class Main:
             with vehicle_list_lock:
                 self.vehicle_list.append(vehicle)
 
-    def display_data(self, vehicle_count, processed_vehicles):
-        x, y = 20, 20
+    def display_data(self, vehicle_count, processed_vehicles, generation):
+        count_x, count_y = 20, 20
         line_spacing = 25
         color = (0, 0, 0)
         for k, v in vehicle_count.items():
             content = f"{k.capitalize()} lane: {v}"
-            text = self.font.render(content, True, color)
-            self.screen.blit(text, (x, y))
-            y += line_spacing
+            count = self.font.render(content, True, color)
+            self.screen.blit(count, (count_x, count_y))
+            count_y += line_spacing
 
-        x_1, y_1 = 20, y + line_spacing
-        text_2 = self.font.render(f"Processed Vehicles: {str(sum(processed_vehicles.values()))}", True, color)
-        self.screen.blit(text_2, (x_1, y_1))
+        processed_x, processed_y = 20, count_y + line_spacing
+        processed_count = self.font.render(f"Processed Vehicles: {str(sum(processed_vehicles.values()))}", True, color)
+        self.screen.blit(processed_count, (processed_x, processed_y))
+
+        if generation is not None:
+            gen_x, gen_y = 20, processed_y + line_spacing
+            current_gen = self.font.render(f"Generation: {generation}", True, color)
+            self.screen.blit(current_gen, (gen_x, gen_y))
 
     def calculate_dti(self):
         ans = {}
@@ -271,7 +277,7 @@ class Main:
         np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
         print("Model saved successfully.")
 
-    def run(self):
+    def run(self, generation=None):
 
         screen = pygame.display.set_mode((self.width, self.height))
 
@@ -347,7 +353,7 @@ class Main:
                             self.vehicle_parameters["vehicle_count"][crossed_direction] -= 1
 
                 self.display_data(self.vehicle_parameters["vehicle_count"],
-                                  self.vehicle_parameters["processed_vehicles"])
+                                  self.vehicle_parameters["processed_vehicles"], generation)
 
                 pygame.display.flip()
 

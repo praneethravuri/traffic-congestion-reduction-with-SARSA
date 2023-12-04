@@ -8,7 +8,7 @@ def train(generations):
     for generation in range(generations):
         main_instance.reset_environment()
         main_instance.initialize_sarsa()
-        total_reward = main_instance.run()
+        total_reward = main_instance.run(generation=generation+1)
         time.sleep(1)
         print(f"Generation: {generation + 1} | Reward: {total_reward}")
 
