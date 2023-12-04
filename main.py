@@ -151,16 +151,6 @@ class Main:
 
     @staticmethod
     def calculate_reward(old_dti, new_dti):
-        # # Calculate the total reduction in DTI across all lanes
-        # dti_reduction = sum(old_dti.values()) - sum(new_dti.values())
-        #
-        # # If the DTI hasn't increased, provide a small positive reward
-        # if dti_reduction >= 0:
-        #     reward = dti_reduction + 1  # The +1 ensures a positive reward for maintaining low/zero DTI
-        # else:
-        #     reward = dti_reduction  # Negative reward for increased DTI
-        #
-        # return reward
         max_reward = 10
         max_penalty = -10
 
@@ -322,15 +312,17 @@ class Main:
                 if self.sarsa_agent.epsilon > self.min_epsilon:
                     self.sarsa_agent.epsilon *= self.epsilon_decay
 
-                if self.last_action_time is None or (current_time - self.last_action_time) >= 1000:
+                if self.last_action_time is None or (current_time - self.last_action_time) >= 500:
                     current_state = self.calculate_state()
                     current_action = self.sarsa_agent.choose_action(current_state)
                     self.apply_action(current_action, traffic_lights)
+
                     new_dti = self.calculate_dti()
                     reward = self.calculate_reward(old_dti, new_dti)
                     print(f"Reward: {reward}")
                     self.reward_list.append(reward)
                     self.total_reward += reward
+
                     new_state = self.calculate_state()
                     next_action = self.sarsa_agent.choose_action(new_state)
                     self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)

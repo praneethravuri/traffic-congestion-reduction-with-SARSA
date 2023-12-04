@@ -156,37 +156,12 @@ class Vehicle:
                 if self.x < self.threshold:
                     self.change_speed('x', True)
 
-        # For vehicle coming from the east
-        # elif self.direction == "east":
-        #     if go_condition or keep_moving_condition:
-        #         self.handle_turn(self.out_going_direction, current_turning_point)
-        #     else:
-        #         if self.x > self.threshold:
-        #             self.change_speed('x', False)
-
         elif self.direction == "east":
             if go_condition or (self.has_crossed_threshold and not keep_moving_condition):
                 self.handle_turn(self.out_going_direction, current_turning_point)
             elif not self.has_crossed_threshold:
                 if self.x > self.threshold:
                     self.change_speed('x', False)
-
-
-        # # For vehicle coming from the north
-        # elif self.direction == "north":
-        #     if go_condition or keep_moving_condition:
-        #         self.handle_turn(self.out_going_direction, current_turning_point)
-        #     else:
-        #         if self.y < self.threshold:
-        #             self.change_speed('y', True)
-        #
-        # # For vehicle coming from the south
-        # elif self.direction == "south":
-        #     if go_condition or keep_moving_condition:
-        #         self.handle_turn(self.out_going_direction, current_turning_point)
-        #     else:
-        #         if self.y > self.threshold:
-        #             self.change_speed('y', False)
 
         elif self.direction == "north":
             if go_condition or (self.has_crossed_threshold and not keep_moving_condition):
