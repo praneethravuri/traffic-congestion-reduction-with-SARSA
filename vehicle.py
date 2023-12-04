@@ -5,6 +5,7 @@ import uuid
 
 class Vehicle:
     def __init__(self, screen, radius, width, speed, processed_vehicles, dti_info):
+        # initializing the variables
         self.screen, self.radius, self.width, self.speed = screen, radius, width, speed
         self.x, self.y, self.direction, self.color = None, None, None, None
         self.moving, self.out_going_direction, self.lane, self.threshold = True, None, None, None
@@ -17,14 +18,21 @@ class Vehicle:
 
     def generate_vehicle(self, vehicle_spawn_coords, vehicle_incoming_direction, vehicle_direction_color,
                          vehicle_count):
+        # setting the spawn direction of the vehicle
         self.direction = random.choice(vehicle_incoming_direction)
         vehicle_count[self.direction] += 1
         self.lane = self.direction
+        # using the vehicle spawn coordinates to spawn the vehicle according to the direction
         self.x, self.y = vehicle_spawn_coords[self.direction]
+        # setting the color and outgoing direction of the vehicle
+        # determines if the vehicle is going to turn left, right, or go straight
         self.out_going_direction = random.choice(["straight", "left", "right"])
+        # depending on its outgoing direction, its color is set
         self.color = vehicle_direction_color[self.out_going_direction]
 
     def change_speed(self, axis, increment):
+        # depending on the outgoing direction and its spawn direction
+        # the speed of the vehicle is increase or decreased
         if axis == "x":
             self.x += self.speed if increment else -self.speed
         elif axis == "y":
@@ -117,17 +125,26 @@ class Vehicle:
         # if the traffic light is green, the vehicle is free to move
         # if the traffic light is either red or yellow, the car is free to move upto the threshold of that direction
         go_condition = current_traffic_light == self.direction and current_light_state == "GREEN"
+
+        # limiting_thresholds tell us the point to which the vehicle is allowed to move
+        # if the traffic light in that direction is red or yellow
         limiting_thresholds = {
             "west": self.x > self.threshold,
             "east": self.x < self.threshold,
             "south": self.y < self.threshold,
             "north": self.y > self.threshold
         }
+
+        # if the traffic light is red or yellow, and the vehicle has not reached the threshold
+        # the vehicle's speed is increased until it reaches the threshold
         keep_moving_condition = current_light_state in ["YELLOW", "RED"] and limiting_thresholds[self.direction]
 
+        # getting the direction whose traffic light is now green
         light_state_for_direction = current_traffic_light_colors.get(self.direction, "GREEN")
 
-        if light_state_for_direction in ["RED"]:
+        # stopping the vehicle if there is another vehicle in front of it
+        # both the vehicles should be in the same lane
+        if light_state_for_direction in ["RED", "YELLOW"]:
             for other_vehicle in vehicle_list:
                 if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
                     distance = self.get_position() - other_vehicle.get_position()
@@ -138,6 +155,10 @@ class Vehicle:
                         self.can_move = False
                         break
 
+        # if the vehicle has stopped in the lane for which the lane's traffic light is yellow or red
+        # its wait time is calculated
+        # once the vehicle starts moving, its wait time is not calculated
+        # each vehicle in each lane's wait time is calculate and added to the dti_info dictionary
         if not self.can_move:
             if self.stop_time is None:
                 self.stop_time = pygame.time.get_ticks()
@@ -149,6 +170,9 @@ class Vehicle:
         else:
             self.stop_time = None
 
+        # keep moving the vehicle if the signal is green
+        # keep moving the vehicle if the signal is red or yellow and the vehicle has not crossed the threshold
+        # keep moving the vehicle once it crosses the threshold
         if self.direction == "west":
             if go_condition or (self.has_crossed_threshold and not keep_moving_condition):
                 self.handle_turn(self.out_going_direction, current_turning_point)
@@ -177,16 +201,22 @@ class Vehicle:
                 if self.y > self.threshold:
                     self.change_speed('y', False)
 
+        # return the coordinates of the vehicle to draw it on the screen
         return self.x, self.y
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, [self.x, self.y], self.radius, self.width)
 
+    # once the vehicle is off the screen
+    # it is removed from the vehicle thread list
     def kill_vehicle(self, width, height):
         # Check if the vehicle is out of bounds
         out_of_bounds = self.x < 0 or self.x > width or self.y < 0 or self.y > height
         return out_of_bounds
 
+    # this function is used to check whether the vehicle has crossed the threshold or not
+    # this is useful to count the number of processed vehicles (vehicles that have crossed the threshold
+    # when the light is green)
     def crossed_threshold(self):
         if not self.has_crossed_threshold:
             crossed = False
@@ -199,6 +229,10 @@ class Vehicle:
             elif self.direction == "south" and self.y < self.threshold:
                 crossed = True
 
+            # once the vehicle has crossed the threshold
+            # it is removed from the vehicle thread list
+            # this removed vehicle's delay time is no longer required to calculate the delay time indicator
+            # hence its wait time is removed from the dti_info dictionary
             if crossed:
                 self.has_crossed_threshold = True
                 self.processed_vehicles[self.direction] += 1
