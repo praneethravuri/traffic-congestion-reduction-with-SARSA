@@ -325,7 +325,8 @@ class Main:
 
                     new_dti = self.calculate_dti()
                     reward = self.calculate_reward(old_dti, new_dti)
-                    print(f"Reward: {reward}")
+                    if reward in range(0, -5):
+                        print(f"Reward : {reward, self.vehicle_parameters}")
                     self.reward_list.append(reward)
                     self.total_reward += reward
 
