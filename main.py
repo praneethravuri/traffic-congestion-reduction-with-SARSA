@@ -114,9 +114,14 @@ class Main:
         self.vehicle_list = []
         self.vehicle_list_lock = threading.Lock()
 
+        self.vehicle_threshold = 10
+
+        self.action_changed = None
+        self.last_action = None
+
         # Epsilon Decay Parameters
         self.initial_epsilon = 0.9  # Starting value of epsilon
-        self.epsilon_decay = 0.9995  # Decay factor for each step
+        self.epsilon_decay = 0.011  # Decay factor for each step
         self.min_epsilon = 0.1  # Minimum value of epsilon
 
         # font object
@@ -137,52 +142,145 @@ class Main:
         self.total_reward = 0
         self.reward_list = []
 
-    def plot_average_rewards(self):
-        window_size = 50
-        average_rewards = [np.mean(self.reward_list[i:i + window_size]) for i in
-                           range(0, len(self.reward_list), window_size)]
-        plt.figure()
-        plt.plot(average_rewards)
-        plt.xlabel('Time (in windows of {} steps)'.format(window_size))
+    # def plot_average_rewards(self):
+    #     window_size = 50
+    #     average_rewards = [np.mean(self.reward_list[i:i + window_size]) for i in
+    #                        range(0, len(self.reward_list), window_size)]
+    #     plt.figure()
+    #     plt.plot(average_rewards)
+    #     plt.xlabel('Time (in windows of {} steps)'.format(window_size))
+    #     plt.ylabel('Average Reward')
+    #     plt.title('Average Reward Over Time')
+    #     os.makedirs('plots', exist_ok=True)
+    #     plt.savefig('plots/average_rewards_plot.png')
+    #     plt.close()
+
+    def plot_learning_curve(self):
+        # TODO: change window size for 100, 1000, 10000 iterations
+        window_size = 1  # Define the size of the window for averaging
+        rewards = np.array(self.reward_list)
+
+        # Compute the average rewards over the window
+        averaged_rewards = np.convolve(rewards, np.ones(window_size) / window_size, mode='valid')
+
+        # Plotting
+        plt.figure(figsize=(10, 6))
+        plt.plot(np.arange(len(rewards)), rewards, alpha=0.5, label='Raw Rewards')
+        plt.plot(np.arange(window_size - 1, window_size - 1 + len(averaged_rewards)), averaged_rewards, color='red',
+                 label='Smoothed Rewards')
+        plt.title('Model Learning Curve')
+        plt.xlabel('Iterations')
         plt.ylabel('Average Reward')
-        plt.title('Average Reward Over Time')
-        os.makedirs('plots', exist_ok=True)
-        plt.savefig('plots/average_rewards_plot.png')
-        plt.close()
+        plt.legend()
+        plt.grid(True)
+        # TODO: change the name of the graphs according to the changes
+        os.makedirs('plots/test_plots', exist_ok=True)
+        plt.savefig(
+            f'plots/test_plots/learning_curve_{len(self.reward_list)}_iterations_with_action_cost_0_011e_ac_eindl.png')
+        plt.show()
 
-    @staticmethod
-    def calculate_reward(old_dti, new_dti):
-        max_reward = 10
-        max_penalty = -10
+    # @staticmethod
+    # def calculate_reward(old_dti, new_dti, vehicle_count):
+    #     max_reward = 10
+    #     max_penalty = -10
+    #
+    #     delay_before = sum(old_dti.values())
+    #     delay_after = sum(new_dti.values())
+    #
+    #     if delay_before == 0:
+    #         if delay_after > 0:
+    #             # Introducing delay where there was none should be penalized
+    #             return max_penalty
+    #         else:
+    #             # Maintaining no congestion could be a neutral or slightly positive outcome
+    #             return 1  # or some small positive value
+    #     else:
+    #         improvement = delay_before - delay_after
+    #         if improvement > 0:
+    #             # Scale the reward based on the percentage improvement
+    #             reward = (improvement / delay_before) * max_reward
+    #         elif improvement < 0:
+    #             # Scale the penalty based on the percentage worsening
+    #             penalty_ratio = abs(improvement) / delay_before
+    #             reward = penalty_ratio * max_penalty
+    #         else:
+    #             # No change in delay
+    #             reward = 0
+    #
+    #     return reward
 
-        delay_before = sum(old_dti.values())
-        delay_after = sum(new_dti.values())
+    # def calculate_reward(self, old_dti, new_dti):
+    #
+    #     alpha = 0.5
+    #     beta = 0.3
+    #     gamma = 0.2
+    #
+    #     reduction_in_total_congestion = (sum(old_dti.values()) - sum(new_dti.values()))
+    #     excess_vehicles = [max(0, count - self.vehicle_threshold) for count in
+    #                        self.vehicle_parameters["vehicle_count"].values()]
+    #     avg_congestion_above_threshold = sum(excess_vehicles) / 4
+    #
+    #     action_cost = 1 if self.action_changed else 0
+    #     raw_reward = (alpha * reduction_in_total_congestion) - (beta * avg_congestion_above_threshold) - (
+    #             gamma * action_cost)
+    #
+    #     # # Normalize or scale the reward
+    #     # # Adjust these based on your expected range of raw_reward
+    #     # min_reward = -50  # Adjusted minimum value
+    #     # max_reward = 50  # Adjusted maximum value
+    #     #
+    #     # # Linearly transform the reward to be within a more controlled range (e.g., -10 to 10)
+    #     # scaled_reward = 20 * (raw_reward - min_reward) / (max_reward - min_reward) - 10
+    #
+    #     print(f"OLD DTI: {old_dti}")
+    #     print(f"NEW DTI: {new_dti}")
+    #     print(f"Reduction in total congestion: {reduction_in_total_congestion}")
+    #     print(f'Vehicle Count: {self.vehicle_parameters["vehicle_count"]}')
+    #     print(f"Avg congestion above threshold: {avg_congestion_above_threshold}")
+    #     print(f"Action Cost: {action_cost}")
+    #     print(f"Raw reward: {raw_reward}")
+    #     return raw_reward
 
-        if delay_before == 0:
-            if delay_after > 0:
-                # Introducing delay where there was none should be penalized
-                return max_penalty
+    # TODO: calculate rewards according to eah lane. add weights
+    def calculate_reward(self, old_dti, new_dti):
+        vehicle_count = self.vehicle_parameters["vehicle_count"].copy()
+        lane_rewards = {}
+        max_reward = 5  # Maximum reward for a lane
+        max_penalty = -5  # Maximum penalty for a lane
+
+        for lane in ["north", "east", "south", "west"]:
+            lane_congestion_before = old_dti.get(lane, 0)
+            lane_congestion_after = new_dti.get(lane, 0)
+            vehicle_count_in_lane = vehicle_count[lane]
+
+            if lane_congestion_before == 0:
+                if lane_congestion_after > 0:
+                    lane_rewards[lane] = max_penalty
+                else:
+                    lane_rewards[lane] = 1  # Small positive reward for maintaining no congestion
             else:
-                # Maintaining no congestion could be a neutral or slightly positive outcome
-                return 1  # or some small positive value
-        else:
-            improvement = delay_before - delay_after
-            if improvement > 0:
-                # Scale the reward based on the percentage improvement
-                reward = (improvement / delay_before) * max_reward
-            elif improvement < 0:
-                # Scale the penalty based on the percentage worsening
-                penalty_ratio = abs(improvement) / delay_before
-                reward = penalty_ratio * max_penalty
-            else:
-                # No change in delay
-                reward = 0
+                congestion_reduction = lane_congestion_before - lane_congestion_after
+                if congestion_reduction > 0:
+                    reward = (congestion_reduction / lane_congestion_before) * max_reward
+                    lane_rewards[lane] = min(reward, max_reward)  # Cap the reward to max_reward
+                elif congestion_reduction < 0:
+                    penalty_ratio = abs(congestion_reduction) / lane_congestion_before
+                    lane_rewards[lane] = penalty_ratio * max_penalty
+                else:
+                    lane_rewards[lane] = 0
 
-        return reward
+        # Aggregate individual lane rewards
+        total_reward = sum(lane_rewards.values())
+
+        return round(total_reward, 3)
 
     def apply_action(self, action, traffic_lights):
         directions = ["north", "east", "south", "west"]
         chosen_direction = directions[action]
+        if self.last_action is None or self.last_action != chosen_direction:
+            self.action_changed = True
+        elif self.last_action == chosen_direction:
+            self.action_changed = False
         traffic_lights.change_light(chosen_direction)
         self.last_action_time = pygame.time.get_ticks()
 
@@ -246,6 +344,36 @@ class Main:
 
         return ans
 
+    def calculate_traffic_trend(self, current_counts, previous_counts):
+        trend = {}
+        for direction in current_counts:
+            if current_counts[direction] > previous_counts[direction]:
+                trend[direction] = 'increasing'
+            elif current_counts[direction] < previous_counts[direction]:
+                trend[direction] = 'decreasing'
+            else:
+                trend[direction] = 'stable'
+        return trend
+
+    def predict_future_traffic(self, current_trend):
+        prediction = {}
+        for direction, trend in current_trend.items():
+            if trend == 'increasing':
+                prediction[direction] = 'likely to increase'
+            elif trend == 'decreasing':
+                prediction[direction] = 'likely to decrease'
+            else:
+                prediction[direction] = 'likely to remain stable'
+        return prediction
+
+    def should_take_action(self, predictions):
+        # Modify this function to consider the predictions
+        for direction, prediction in predictions.items():
+            if prediction == 'likely to increase' and self.vehicle_parameters["vehicle_count"][
+                direction] > self.vehicle_threshold:
+                return True
+        return False
+
     def run(self, generation=None, training=False, end_count=None):
 
         screen = pygame.display.set_mode((self.width, self.height))
@@ -272,7 +400,9 @@ class Main:
             print(f"Error starting thread: {e}")
 
         # Main loop
+        count = 0
         old_dti = self.calculate_dti()
+        previous_vehicle_counts = self.vehicle_parameters["vehicle_count"].copy()
         running = True
         try:
             while running:
@@ -284,18 +414,26 @@ class Main:
                 current_traffic_light, current_light_state, current_traffic_light_colors = traffic_lights.update(
                     current_time)
 
-                if self.sarsa_agent.epsilon > self.min_epsilon:
-                    self.sarsa_agent.epsilon *= self.epsilon_decay
+                current_vehicle_counts = self.vehicle_parameters["vehicle_count"].copy()
+                traffic_trend = self.calculate_traffic_trend(current_vehicle_counts, previous_vehicle_counts)
+                future_traffic_prediction = self.predict_future_traffic(traffic_trend)
 
-                if self.last_action_time is None or (current_time - self.last_action_time) >= 500:
+                # if self.last_action_time is None or (current_time - self.last_action_time) >= 500:
+                if self.should_take_action(future_traffic_prediction):
+
+                    # TODO: test to see if putting epsilon outside the if condition works
+                    self.sarsa_agent.epsilon = max(self.min_epsilon, self.sarsa_agent.epsilon * self.epsilon_decay)
+
                     current_state = self.calculate_state()
                     current_action = self.sarsa_agent.choose_action(current_state)
                     self.apply_action(current_action, traffic_lights)
 
                     new_dti = self.calculate_dti()
+                    # reward = self.calculate_reward(old_dti, new_dti, self.vehicle_parameters["vehicle_count"])
                     reward = self.calculate_reward(old_dti, new_dti)
-                    if reward in range(0, -5):
-                        print(f"Reward : {reward, self.vehicle_parameters}")
+                    count += 1
+                    print(f"Reward: {reward} | {count}")
+                    print("\n-----\n")
                     self.reward_list.append(reward)
                     self.total_reward += reward
 
@@ -304,6 +442,8 @@ class Main:
                     self.sarsa_agent.update(current_state, current_action, reward, new_state, next_action)
                     self.last_action_time = current_time
                     old_dti = new_dti
+
+                previous_vehicle_counts = current_vehicle_counts.copy()
 
                 intersection.draw()
                 traffic_lights.draw()
@@ -331,6 +471,10 @@ class Main:
                     if sum(self.vehicle_parameters["processed_vehicles"].values()) > end_count:
                         return self.total_reward
 
+                if len(self.reward_list) >= 100:
+                    print(f"Max reward: {max(self.reward_list)} | Min reward: {min(self.reward_list)}")
+                    pygame.quit()
+
         except Exception as e:
             print(f"Error during main loop: {e}", end='\r')
             traceback.print_exc()
@@ -338,7 +482,7 @@ class Main:
         finally:
             stop_event.set()
             vehicle_gen_thread.join()
-            self.plot_average_rewards()
+            self.plot_learning_curve()
 
         try:
             pygame.quit()
