@@ -246,38 +246,7 @@ class Main:
 
         return ans
 
-    def reset_environment(self):
-        self.current_light_state = "RED"
-        self.starting_traffic_light = random.choice(self.traffic_light_parameters["directions"])
-        self.traffic_lights = TrafficLights(self.screen, self.starting_traffic_light, self.current_light_state,
-                                            self.traffic_light_parameters["directions"], self.colors["traffic_lights"],
-                                            self.traffic_light_width,
-                                            self.intersection_center, self.road_width, self.intersection_trl_width,
-                                            self.traffic_light_parameters["timings"])
-
-        # Clear all vehicles and reset related parameters
-        with self.vehicle_list_lock:
-            self.vehicle_list.clear()
-        self.vehicle_parameters["vehicle_count"] = {"north": 0, "south": 0, "east": 0, "west": 0}
-        self.vehicle_parameters["processed_vehicles"] = {"north": 0, "south": 0, "east": 0, "west": 0}
-        self.vehicle_parameters["dti_info"] = {"north": {}, "south": {}, "east": {}, "west": {}}
-
-        # Reset timers and counters
-        self.last_action_time = None
-
-        # Reset reward and other metrics
-        self.total_reward = 0
-
-        self.initial_epsilon = 0.9
-
-    def save_model(self):
-        # Ensure the directory for saving exists
-        os.makedirs('saved_models', exist_ok=True)
-        # Save the Q-table
-        np.save('saved_models/sarsa_q_table.npy', self.sarsa_agent.q_table)
-        print("Model saved successfully.")
-
-    def run(self, generation=None, training=False):
+    def run(self, generation=None, training=False, end_count=None):
 
         screen = pygame.display.set_mode((self.width, self.height))
 
@@ -359,7 +328,7 @@ class Main:
                 pygame.display.flip()
 
                 if training:
-                    if sum(self.vehicle_parameters["processed_vehicles"].values()) > 10:
+                    if sum(self.vehicle_parameters["processed_vehicles"].values()) > end_count:
                         return self.total_reward
 
         except Exception as e:

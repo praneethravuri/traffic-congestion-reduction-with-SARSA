@@ -144,7 +144,7 @@ class Vehicle:
 
         # stopping the vehicle if there is another vehicle in front of it
         # both the vehicles should be in the same lane
-        if light_state_for_direction in ["RED", "YELLOW"]:
+        if light_state_for_direction in ["RED", "YELLOW"] and not self.has_crossed_threshold:
             for other_vehicle in vehicle_list:
                 if other_vehicle.direction == self.direction and other_vehicle.id != self.id:
                     distance = self.get_position() - other_vehicle.get_position()
