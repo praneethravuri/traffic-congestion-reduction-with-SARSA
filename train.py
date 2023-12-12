@@ -11,6 +11,7 @@ class Train:
         self.main_instance = Main()
         self.generations = generations
         self.end_count = end_count
+        self.reward_dic = {}
 
     def reset_environment(self):
         self.main_instance.current_light_state = "RED"
@@ -42,6 +43,9 @@ class Train:
 
         self.main_instance.initial_epsilon = 0.9
 
+        self.main_instance.reward_list = []
+        self.main_instance.total_reward = 0
+
     def save_model(self):
         # Ensure the directory for saving exists
         os.makedirs('saved_models', exist_ok=True)
@@ -53,7 +57,8 @@ class Train:
         for generation in range(self.generations):
             self.reset_environment()
             self.main_instance.initialize_sarsa()
-            total_reward = self.main_instance.run(generation=generation + 1, training=True, end_count=self.end_count)
+            total_reward = self.main_instance.run(generation + 1, True, self.end_count)
+            self.reward_dic.setdefault(generation, total_reward)
             time.sleep(1)
             print(f"Generation: {generation + 1} | Reward: {total_reward}")
 
@@ -61,5 +66,5 @@ class Train:
 
 
 if __name__ == "__main__":
-    train_model = Train(generations=3, end_count=100)
+    train_model = Train(generations=50, end_count=10000)
     train_model.train()
