@@ -11,6 +11,7 @@ class Crossing:
         self.intersection_trl_width = intersection_trl_width
 
     def draw_crossing(self, position, size):
+        # drawing the crossing
         pygame.draw.rect(self.screen, self.intersection_colors["GRAY"], (position, size))
 
     def draw(self):

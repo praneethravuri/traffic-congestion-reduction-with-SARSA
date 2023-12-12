@@ -10,25 +10,19 @@ class Model:
         self.main_instance = Main()
 
     def load_q_table(self):
-        """
-        Load the Q-table from a .npy file.
-        """
+        # Load the Q-table from a .npy file.
         self.q_table = np.load(self.q_table_filename)
 
     def determine_best_actions(self):
-        """
-        Determine the best action for each state based on the Q-table.
-        """
+        # Determine the best action for each state based on the Q-table.
         if self.q_table is not None:
             self.best_actions = np.argmax(self.q_table, axis=1)
         else:
             raise ValueError("Q-table not loaded")
 
     def implement_in_simulation(self):
-        """
-        Implement the best actions in the simulation environment.
-        This method needs to be tailored to the specific simulation environment.
-        """
+        # Implement the best actions in the simulation environment.
+        # This method needs to be tailored to the specific simulation environment.
         if self.best_actions is None:
             raise ValueError("Best actions not determined. Call determine_best_actions() first.")
 

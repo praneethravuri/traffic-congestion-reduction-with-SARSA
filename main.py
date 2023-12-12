@@ -370,6 +370,7 @@ class Main:
                 traffic_trend = self.calculate_traffic_trend(new_vehicle_count, old_vehicle_count)
                 future_traffic_prediction = self.predict_future_traffic(traffic_trend)
 
+                # for train.py
                 if training:
                     if self.should_take_action(future_traffic_prediction):
                         self.sarsa_agent.epsilon = max(self.min_epsilon, self.sarsa_agent.epsilon * self.epsilon_decay)
@@ -389,6 +390,7 @@ class Main:
                         self.last_action_time = current_time
                         old_dti = new_dti
 
+                # for model.py
                 if action_list is not None and action_index < len(action_list):
                     current_action = action_list[action_index]
                     self.apply_action(current_action, traffic_lights)
