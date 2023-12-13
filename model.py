@@ -30,7 +30,7 @@ class Model:
         for state in range(len(self.best_actions)):
             action_list.append(self.best_actions[state])
 
-        self.main_instance.run(action_list=action_list)
+        self.main_instance.run(action_list=action_list, training=True)
 
 
 # Usage
