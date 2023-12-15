@@ -372,8 +372,7 @@ class Main:
 
                 # for train.py
                 if training:
-                    # if self.should_take_action(future_traffic_prediction):
-                    if sum(self.vehicle_parameters["vehicle_count"].values()) in range(5, self.vehicle_threshold):
+                    if self.should_take_action(future_traffic_prediction):
                         self.sarsa_agent.epsilon = max(self.min_epsilon, self.sarsa_agent.epsilon * self.epsilon_decay)
 
                         current_state = self.calculate_state()
@@ -392,10 +391,10 @@ class Main:
                         old_dti = new_dti
 
                 # for model.py
-                # if action_list is not None and action_index < len(action_list):
-                #     current_action = action_list[action_index]
-                #     self.apply_action(current_action, traffic_lights)
-                #     action_index += 1
+                if action_list is not None and action_index < len(action_list):
+                    current_action = action_list[action_index]
+                    self.apply_action(current_action, traffic_lights)
+                    action_index += 1
 
                 old_vehicle_count = new_vehicle_count
 
@@ -420,9 +419,9 @@ class Main:
 
                 pygame.display.flip()
 
-                # if training:
-                #     if len(self.reward_list) > end_count:
-                #         return self.total_reward
+                if training:
+                    if len(self.reward_list) > end_count:
+                        return self.total_reward
 
         except Exception as e:
             print(f"Error during main loop: {e}", end='\r')
