@@ -2,6 +2,8 @@
 
 ## CS 695 - Decision Making and Reinforcement Learning (GMU)
 
+![](demo.gif)
+
 ## Introduction and Motivation
 
 Urban areas around the globe are increasingly grappling with the challenge of traffic
@@ -81,14 +83,14 @@ simulation. This phase demonstrates the application of learned strategies in rea
 traffic management, utilizing the training phase's accumulated knowledge for effective
 traffic light control.
 
-   α = 0.05, γ = 0.9      |  α = 0.05, γ = 0.95   
-:-------------------------:|:-------------------------:
-<img src="./plots/alpha_0_05_gamma_0_9.png" alt="">  |  <img src="./plots/alpha_0_05_gamma_0_95.png" alt="">
+|                  α = 0.05, γ = 0.9                  |                  α = 0.05, γ = 0.95                  |
+| :-------------------------------------------------: | :--------------------------------------------------: |
+| <img src="./plots/alpha_0_05_gamma_0_9.png" alt=""> | <img src="./plots/alpha_0_05_gamma_0_95.png" alt=""> |
 
-   α = 0.05, γ = 0.99      |  α = 0.1, γ = 0.9  
-:-------------------------:|:-------------------------:
-<img src="./plots/alpha_0_05_gamma_0_99.png" alt="">  |  <img src="./plots/alpha_0_1_gamma_0_9.png" alt="">
+|                  α = 0.05, γ = 0.99                  |                  α = 0.1, γ = 0.9                  |
+| :--------------------------------------------------: | :------------------------------------------------: |
+| <img src="./plots/alpha_0_05_gamma_0_99.png" alt=""> | <img src="./plots/alpha_0_1_gamma_0_9.png" alt=""> |
 
-   α = 0.1, γ = 0.95      |  α = 0.1, γ = 0.99  
-:-------------------------:|:-------------------------:
-<img src="./plots/alpha_0_1_gamma_0_95.png" alt="">  |  <img src="./plots/alpha_0_1_gamma_0_99.png" alt="">
+|                  α = 0.1, γ = 0.95                  |                  α = 0.1, γ = 0.99                  |
+| :-------------------------------------------------: | :-------------------------------------------------: |
+| <img src="./plots/alpha_0_1_gamma_0_95.png" alt=""> | <img src="./plots/alpha_0_1_gamma_0_99.png" alt=""> |
