@@ -4,7 +4,27 @@
 
 ![](demo.gif)
 
+## Installation (Docker)
+
 ## Introduction and Motivation
+
+1. Clone the repository
+
+`git clone https://github.com/praneethravuri/traffic-congestion-reduction-with-SARSA.git`
+
+2. Build Docker Image
+
+`docker build -t sarsa-traffic .`
+
+3.  Configure Environment for Graphical Display
+
+    1. For Linux/WSL Users: `export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0`
+
+    2. For Windows Users (WSL): ```export DISPLAY=$(grep nameserver /etc/resolv.conf | cut -d ' ' -f 2):0.0```
+
+4. Running the application
+
+```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python main.py```
 
 Urban areas around the globe are increasingly grappling with the challenge of traffic
 congestion. This not only leads to longer commute times but also contributes to
