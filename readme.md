@@ -6,8 +6,6 @@
 
 ## Installation (Docker)
 
-## Introduction and Motivation
-
 1. Clone the repository
 
 `git clone https://github.com/praneethravuri/traffic-congestion-reduction-with-SARSA.git`
@@ -25,6 +23,8 @@
 4. Running the application
 
 ```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python main.py```
+
+## Introduction and Motivation
 
 Urban areas around the globe are increasingly grappling with the challenge of traffic
 congestion. This not only leads to longer commute times but also contributes to
