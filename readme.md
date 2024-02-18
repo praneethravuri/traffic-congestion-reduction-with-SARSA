@@ -22,7 +22,9 @@
 
 4. Running the application
 
-```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python main.py```
+    1. Running main.py: ```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python main.py```
+
+    2. Running model.py: ```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python model.py```
 
 ## Introduction and Motivation
 
