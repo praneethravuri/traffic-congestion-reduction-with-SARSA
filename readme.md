@@ -1,10 +1,18 @@
 # Traffic Congestion Reduction with SARSA
 
-## CS 695 - Decision Making and Reinforcement Learning (GMU)
+<h3 align="center">
+<img alt="Alt text" src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54"/>
+<img alt="Alt text" src="https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white"/>
+<img alt="Alt text" src="https://img.shields.io/badge/nVIDIA-%2376B900.svg?style=for-the-badge&logo=nVIDIA&logoColor=white"/>
+<img alt="Alt text" src="https://img.shields.io/badge/pycharm-143?style=for-the-badge&logo=pycharm&logoColor=black&color=black&labelColor=green"/>
+<img alt="Alt text" src="https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=for-the-badge&logo=Matplotlib&logoColor=black"/>
+</h3>
+
+#### CS 695 - Decision Making and Reinforcement Learning (GMU)
 
 ![](demo.gif)
 
-## Installation (Docker)
+#### Installation (Docker)
 
 1. Clone the repository
 
@@ -26,7 +34,7 @@
 
     2. Running model.py: ```docker run -it -e DISPLAY=$DISPLAY -e XDG_RUNTIME_DIR=/tmp sarsa-traffic python model.py```
 
-## Introduction and Motivation
+### Introduction and Motivation
 
 Urban areas around the globe are increasingly grappling with the challenge of traffic
 congestion. This not only leads to longer commute times but also contributes to
@@ -35,7 +43,7 @@ traffic lights, often fail to keep up with the dynamic and unpredictable nature 
 traffic. To address these challenges, our team has been working on a cutting-edge
 solution.
 
-## Code Structure Analysis
+### Code Structure Analysis
 
 The project utilizes Python's Pygame library to simulate traffic at a four-way intersection,
 detailed across several files like Crossing.py, Intersection.py, Traffic_lights.py,
@@ -51,7 +59,7 @@ for red or yellow lights, and for turning vehicles, these points mark where turn
 be executed. The simulation also factors in realistic gaps between vehicles at red lights,
 enhancing the authenticity and management efficiency of the traffic system.
 
-## Reward Calculation for SARSA
+### Reward Calculation for SARSA
 
 In our project, we use two key indicators to assess traffic congestion and calculate
 rewards within a SARSA-based traffic management system. The Delay Time Indicator
@@ -68,7 +76,7 @@ points, and less than 24% increase reduces the reward by 5 points. This system
 encourages strategies to effectively reduce congestion, aiming for efficient traffic
 management at intersections.
 
-## SARSA Implementation
+### SARSA Implementation
 
 The SARSA (State-Action-Reward-State-Action) algorithm in this code is a
 reinforcement learning method applied to manage traffic lights at intersections, aiming
